@@ -9,6 +9,8 @@ export default class Preloader {
     this.overlay = document.querySelector(".overlay");
     this.loading = document.querySelector(".loading");
     this.startButton = document.querySelector(".start");
+    this.controller = document.querySelector(".controller");
+    this.keyboard = document.querySelector(".keyboard");
 
     this.assetStore.subscribe((state) => {
       // console.log("STATE", state.loadedAssets);
@@ -35,17 +37,25 @@ export default class Preloader {
 
     this.startButton.style.display = "inline";
     this.startButton.classList.add("fadeIn");
+    this.controller.style.display = "inline";
+    this.controller.classList.add("fadeIn");
+    this.keyboard.style.display = "inline";
+    this.keyboard.classList.add("fadeIn");
 
     this.startButton.addEventListener(
       "click",
       () => {
         this.overlay.classList.add("fade");
         this.startButton.classList.add("fadeOut");
+        this.controller.classList.add("fadeOut");
+        this.keyboard.classList.add("fadeOut");
 
         // remove the overlay  and startButton elelemnt from DOM
         window.setTimeout(() => {
           this.overlay.remove();
           this.startButton.remove();
+          this.controller.remove();
+          this.keyboard.remove();
         }, 2000);
         appStateStore.setState({ pressedStart: true });
       },

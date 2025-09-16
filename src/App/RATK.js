@@ -18,6 +18,9 @@ export default class RATK {
       right: null,
     };
 
+    this.shadowGroup = new THREE.Group();
+    this.occlusionGroup = new THREE.Group();
+
     inputStore.subscribe((state) => {
       this.debug = state.debug;
       this.forward = state.forward;
@@ -43,6 +46,7 @@ export default class RATK {
 	    });
     }
     this.ratk.onMeshAdded = (mesh) => {
+      console.log(mesh)
       const meshMesh = mesh.meshMesh;
       if(meshMesh.geometry.getAttribute('position').count > 8){ // detailed room scan mesh
         meshMesh.material = new THREE.MeshBasicMaterial({
@@ -52,6 +56,7 @@ export default class RATK {
         });
         this.roomScanMesh = meshMesh;
         this.physics.add(meshMesh, "fixed", "trimesh");
+        this.createShadowOcclusion(mesh)
       }else{
         meshMesh.material = new THREE.MeshBasicMaterial({
           wireframe: true,
@@ -60,8 +65,9 @@ export default class RATK {
         });
       }
     }
+
     this.ratk.root.visible = true;
-    this.scene.add(this.ratk.root);
+    this.scene.add(this.ratk.root, this.shadowGroup, this.occlusionGroup);
     this.instance.xr.addEventListener('sessionstart', () => {
       setTimeout(() => {
         if (this.ratk.planes.size == 0) {
@@ -73,6 +79,43 @@ export default class RATK {
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);
     this.scene.environment = pmremGenerator.fromScene(environment).texture;
     this.scene.environmentIntensity = 0.2;
+  }
+
+  createGeometry(vertices, indices) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  createShadowOcclusion(mesh){
+    let vertices = new Float32Array(mesh.xrMesh.vertices);
+    let indices = new Uint16Array(mesh.xrMesh.indices);
+    const geometry = this.createGeometry(vertices, indices);
+    const material = new THREE.MeshBasicMaterial({
+      colorWrite: false,
+    });
+    const material3 = new THREE.ShadowMaterial({
+      color: 0x333333,
+      transparent: true,
+      opacity: 0.5,
+      renderOrder: 3,
+    });
+
+    // create a buffer geometry
+    const occlusionMesh = new THREE.Mesh(geometry, material);
+    occlusionMesh.renderOrder = - Infinity;
+    occlusionMesh.position.copy(mesh.position);
+    occlusionMesh.quaternion.copy(mesh.quaternion);
+    occlusionMesh.name = "Occlusion Mesh";
+    const shadowMesh = new THREE.Mesh(geometry, material3);
+    shadowMesh.position.copy(mesh.position);
+    shadowMesh.quaternion.copy(mesh.quaternion);
+    shadowMesh.receiveShadow = true;
+    shadowMesh.name = "Shadow Mesh";
+    this.shadowGroup.add(shadowMesh);
+    this.occlusionGroup.add(occlusionMesh);
   }
 
   addControllers() {
@@ -176,6 +219,8 @@ export default class RATK {
     if (this.debug && ! this.debugCoolDown && this.roomScanMesh){
       this.debugCoolDown = true;
       this.roomScanMesh.material.visible = ! this.roomScanMesh.material.visible;
+      this.shadowGroup.visible = ! this.shadowGroup.visible;
+      this.occlusionGroup.visible = ! this.occlusionGroup.visible;
       setTimeout(() => {
         this.debugCoolDown = false;
       }, 300);

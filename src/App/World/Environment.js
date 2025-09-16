@@ -20,11 +20,9 @@ export default class Environment {
     });
     this.debugCoolDown = false;
 
-    // this.loadEnvironment();
     this.simpleEnvironment();
-    this.addLights();
+    // this.addLights();
     console.log(this.app.renderer)
-    // this.addPortals();
   }
 
   simpleEnvironment() {

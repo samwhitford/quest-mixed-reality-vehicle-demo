@@ -9,7 +9,6 @@ import AssetLoader from "./Utils/AssetLoader.js";
 import Preloader from "./UI/Preloader.js";
 import InputController from "./UI/InputController.js";
 import RATK from "./RATK.js";
-// import ModalManager from "./UI/ModalManager.js";
 
 let instance = null;
 

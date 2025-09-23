@@ -2,16 +2,12 @@ import * as THREE from "three";
 import App from "../App.js";
 import assetStore from "../Utils/AssetStore.js";
 import { inputStore } from "../Utils/Store.js";
-// import Portal from "./Portal.js";
-// import ModalContentProvider from "../UI/ModalContentProvider.js";
 
 export default class Environment {
   constructor() {
     this.app = new App();
     this.scene = this.app.scene;
     this.physics = this.app.world.physics;
-    // this.pane = this.app.gui.pane;
-
     this.assetStore = assetStore.getState();
     this.environment = this.assetStore.loadedAssets.environment;
 
@@ -21,33 +17,23 @@ export default class Environment {
     this.debugCoolDown = false;
 
     this.simpleEnvironment();
-    // this.addLights();
     console.log(this.app.renderer)
   }
 
   simpleEnvironment() {
-    this.floorMesh = new THREE.Mesh(new THREE.BoxGeometry(100, 10, 100,4,4,4), new THREE.MeshStandardMaterial({wireframe: true, visible: false}))
+    this.floorMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(100, 10, 100,4,4,4),
+      new THREE.ShadowMaterial({
+        color: 0x333333,
+        transparent: true,
+        opacity: 0.5,
+      })
+    )
     this.floorMesh.position.y = 5
-    // this.floorMesh.receiveShadow = true
+    this.floorMesh.receiveShadow = true
     this.scene.add(this.floorMesh)
     this.physics.add(this.floorMesh, "fixed", "trimesh");
     console.log(this.physics.world)
-  }
-
-  addLights() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    this.scene.add(ambientLight);
-
-    this.directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    this.directionalLight.position.set(1, 1, 1);
-    this.directionalLight.castShadow = true;
-    this.directionalLight.shadow.camera.top = 30;
-    this.directionalLight.shadow.camera.right = 30;
-    this.directionalLight.shadow.camera.left = -30;
-    this.directionalLight.shadow.camera.bottom = -30;
-    this.directionalLight.shadow.bias = -0.002;
-    this.directionalLight.shadow.normalBias = 0.072;
-    this.scene.add(this.directionalLight);
   }
 
   addPortals() {

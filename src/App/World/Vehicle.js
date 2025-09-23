@@ -83,7 +83,7 @@ export default class Vehicle {
     this.chassisMesh.children[0].position.z -= 0.02;
 
     this.antenna = new AntennaRig({
-      boneCount: 6,
+      boneCount: 5,
       length: 0.25,
       topradius: 0.004,
       radius: 0.006,

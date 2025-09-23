@@ -109,7 +109,7 @@ export class AntennaRig {
 
     const targetTilt = new THREE.Vector2(
       -localAccel.z * this.swayMultiplier, // forward/back
-       localAccel.x * (this.swayMultiplier / 10)  // side-to-side
+       localAccel.x * (this.swayMultiplier / 2)  // side-to-side
     );
 
     // --- Base spring physics ---
@@ -133,14 +133,23 @@ export class AntennaRig {
       if (i === 0) return; // root stays fixed
 
       const lagFactor = 0.005 + i / this.bones.length;
-      const currentRot = new THREE.Vector2(bone.rotation.x, bone.rotation.z);
+      // console.log(lagFactor);
+      // const currentRot = new THREE.Vector2(bone.rotation.x, bone.rotation.z);
 
-      currentRot.lerp(prevRot, this.followSpeed * dt * lagFactor);
+      // currentRot.lerp(prevRot, this.followSpeed * dt * lagFactor);
+      const lerpFactor = 1.0 - Math.exp(-this.followSpeed * dt * lagFactor);
+      // currentRot.lerp(prevRot, lerpFactor);
 
-      bone.rotation.x = currentRot.x;
-      bone.rotation.z = currentRot.y;
+      const nextRot = prevRot.clone().lerp(
+        new THREE.Vector2(bone.rotation.x, bone.rotation.z),
+        lerpFactor
+      );
 
-      prevRot = currentRot;
+      // Apply the new rotation to the bone
+      bone.rotation.x = nextRot.x;
+      bone.rotation.z = nextRot.y;
+
+      prevRot = nextRot.clone();
     });
 
     // Make sure GPU bone matrices update

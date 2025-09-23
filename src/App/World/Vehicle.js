@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import assetStore from "../Utils/AssetStore.js";
 import { inputStore } from "../Utils/Store.js";
+import { AntennaRig } from "./Antenna.js";
 
 import App from "../App.js";
 
@@ -12,6 +13,8 @@ export default class Vehicle {
     this.chassis = this.assetStore.loadedAssets.chassis;
     this.wheel = this.assetStore.loadedAssets.wheel;
     this.debugCoolDown = false;
+    this.prevVel = new THREE.Vector3();
+    this.smoothedAccel = new THREE.Vector3();
 
     inputStore.subscribe((state) => {
       this.debug = state.debug;
@@ -21,7 +24,7 @@ export default class Vehicle {
     this.applyMaterial(this.wheel);
 
     this.chassis.scene.scale.set(0.25,0.25,0.25)
-    this.wheel.scene.scale.set(0.25,0.25,0.25)
+    this.wheel.scene.scale.set(0.27,0.27,0.27)
 
     this.centerGeometry(this.chassis);
     this.chassisBoundingBox = this.getBoundingBox(this.chassis.scene);
@@ -45,11 +48,10 @@ export default class Vehicle {
       this.config.position[0],
       this.config.position[1],
       this.config.position[2]
-    );
+    )
+    .setCanSleep(false);
 
     this.chassisBody = this.physics.world.createRigidBody(chassisDesc);
-
-    // this.chassisBoundingBox = this.getBoundingBox(this.chassis.scene);
 
     const chassisCollider = this.world.physics.rapier.ColliderDesc.cuboid(
       this.chassisBoundingBox.x * 0.5,
@@ -61,8 +63,8 @@ export default class Vehicle {
 
     // --- Chassis mesh (Three.js) ---
     const chassisGeom = new THREE.BoxGeometry(
-      this.chassisBoundingBox.x,
-      this.chassisBoundingBox.y,
+      this.chassisBoundingBox.x - 0.05,
+      0.1,
       this.chassisBoundingBox.z
     );
     const chassisMat = new THREE.MeshStandardMaterial({
@@ -71,16 +73,25 @@ export default class Vehicle {
       visible: false,
     });
     this.chassisMesh = new THREE.Mesh(chassisGeom, chassisMat);
-    // this.chassisMesh = this.chassis.scene;
 
     this.chassisMesh.rotation.y = Math.PI;
     this.chassisMesh.castShadow = true;
-    // this.chassis.scene.position.y = - 0.25;
     this.scene.add(this.chassisMesh);
 
-
     this.chassisMesh.add(this.chassis.scene);
-    // this.chassisMesh.children[0].position.y = -0.3;
+    this.chassisMesh.children[0].position.y += 0.02;
+    this.chassisMesh.children[0].position.z -= 0.02;
+
+    this.antenna = new AntennaRig({
+      boneCount: 6,
+      length: 0.25,
+      topradius: 0.004,
+      radius: 0.006,
+      stiffness: 1.0,
+      damping: 0.1
+    });
+    this.antenna.object3d.position.set(-0.06, 0, 0.2);
+    this.chassisMesh.add(this.antenna.object3d);
 
     // --- Vehicle Controller ---
     this.controller = this.world.physics.world.createVehicleController(
@@ -89,13 +100,13 @@ export default class Vehicle {
 
     // --- Wheels ---
     this.wheelMeshes = [];
-    this._addWheels(this.scene, this.chassisBoundingBox);
+    this.addWheels(this.scene);
   }
 
-  _addWheels(scene, chassisBB) {
+  addWheels(scene) {
     const restLength = this.config.wheelRestLength;
-    let posx = 0.15;
-    let posy = 0.08;
+    let posx = 0.13;
+    let posy = 0.05;
     let posz = 0.15;
     const positions = [
       [ posx, - posy,  posz], // front-left
@@ -153,7 +164,30 @@ loop(dt) {
         this.debugCoolDown = false;
       }, 300);
     }
+    this.syncPhysicsAndMesh();
+    this.antennaUpdate(dt);
+  }
 
+  antennaUpdate(dt){
+      const vel = this.chassisBody.linvel();
+      const carVel = new THREE.Vector3(vel.x, vel.y, vel.z);
+
+      // Calculate instantaneous acceleration
+      const instantaneousAccel = carVel.clone().sub(this.prevVel).divideScalar(dt);
+
+      // Use a simple smoothing filter for a more stable acceleration value
+      const alpha = 0.5; // A value between 0 and 1, adjust as needed
+      this.smoothedAccel.lerp(instantaneousAccel, alpha);
+
+      this.prevVel.copy(carVel);
+
+      // Use the smoothed value for the update
+      const carQuat = new THREE.Quaternion();
+      this.chassisMesh.getWorldQuaternion(carQuat);
+      this.antenna.update(dt, this.smoothedAccel, carQuat);
+  }
+
+  syncPhysicsAndMesh() {
     // Sync chassis mesh to the physics body
     const chassisTransform = this.chassisBody.translation();
     const chassisRotation = this.chassisBody.rotation();
@@ -193,14 +227,19 @@ loop(dt) {
         const steeringQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), wheelSteering);
         finalQuaternion.multiply(steeringQuaternion);
 
+        //
+        // TODO FIX rolling rotation for the wheel meshes (approach below not working correctly)
+        //
         // 3. Apply the rolling rotation around the axle axis (local to the wheel).
         // The wheel's local axle is defined by the `wheelAxleCs` from Rapier.
         // This vector is pre-rotated by the steering and chassis quaternions.
-        const rollingQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(wheelAxleCs.x, wheelAxleCs.y, wheelAxleCs.z), wheelRotation);
+
+        // const rollingQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(wheelAxleCs.x, wheelAxleCs.y, wheelAxleCs.z), wheelRotation);
 
         // Now, this is the most critical change: we multiply the final quaternion by the rolling quaternion.
         // This applies the rolling rotation after the chassis and steering rotations have been accounted for.
-        finalQuaternion.multiply(rollingQuaternion);
+
+        // finalQuaternion.multiply(rollingQuaternion);
 
         // Apply the final computed quaternion to the mesh
         mesh.quaternion.copy(finalQuaternion);
@@ -269,5 +308,5 @@ loop(dt) {
     const center = new THREE.Vector3();
     boundingBox.getCenter(center);
     item.scene.position.sub(center);
-}
+  }
 }

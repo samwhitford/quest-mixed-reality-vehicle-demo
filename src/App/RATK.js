@@ -173,33 +173,6 @@ export default class RATK {
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_2)){ // B button
         console.log('clicked B')
       }
-      const thumbstickValueY = gamepad.getAxis(
-        AXES.XR_STANDARD.THUMBSTICK_Y,
-      );
-      if (thumbstickValueY > 0.5){
-        inputStore.setState({forward: false})
-        inputStore.setState({backward: true})
-      }
-      if (thumbstickValueY < - 0.5){
-        inputStore.setState({backward: false})
-        inputStore.setState({forward: true})
-      }
-      if (thumbstickValueY == 0 && (this.forward || this.backward)){
-        inputStore.setState({backward: false})
-        inputStore.setState({forward: false})
-      }
-    }
-    if(this.controllers.left){ // LEFT HAND
-      const {gamepad, raySpace} = this.controllers.left;
-      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
-        inputStore.setState({ debug: true });
-      }
-      if(gamepad.getButtonUp(XR_BUTTONS.BUTTON_1)){
-        inputStore.setState({ debug: false });
-      }
-      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_2)){ // Y button
-        console.log('clicked Y')
-      }
       const thumbstickValueX = gamepad.getAxis(
         AXES.XR_STANDARD.THUMBSTICK_X,
       );
@@ -214,6 +187,33 @@ export default class RATK {
       if (thumbstickValueX == 0 && (this.left || this.right)){
         inputStore.setState({right: false})
         inputStore.setState({left: false})
+      }
+    }
+    if(this.controllers.left){ // LEFT HAND
+      const {gamepad, raySpace} = this.controllers.left;
+      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
+        inputStore.setState({ debug: true });
+      }
+      if(gamepad.getButtonUp(XR_BUTTONS.BUTTON_1)){
+        inputStore.setState({ debug: false });
+      }
+      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_2)){ // Y button
+        console.log('clicked Y')
+      }
+      const thumbstickValueY = gamepad.getAxis(
+        AXES.XR_STANDARD.THUMBSTICK_Y,
+      );
+      if (thumbstickValueY > 0.5){
+        inputStore.setState({forward: false})
+        inputStore.setState({backward: true})
+      }
+      if (thumbstickValueY < - 0.5){
+        inputStore.setState({backward: false})
+        inputStore.setState({forward: true})
+      }
+      if (thumbstickValueY == 0 && (this.forward || this.backward)){
+        inputStore.setState({backward: false})
+        inputStore.setState({forward: false})
       }
     }
     if (this.debug && ! this.debugCoolDown && this.roomScanMesh){

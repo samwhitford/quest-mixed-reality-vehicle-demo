@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import App from "../App.js";
-import assetStore from "../Utils/AssetStore.js";
 import { inputStore } from "../Utils/Store.js";
 
 export default class Environment {
@@ -8,8 +7,6 @@ export default class Environment {
     this.app = new App();
     this.scene = this.app.scene;
     this.physics = this.app.world.physics;
-    this.assetStore = assetStore.getState();
-    this.environment = this.assetStore.loadedAssets.environment;
 
     inputStore.subscribe((state) => {
       this.debug = state.debug;
@@ -17,6 +14,7 @@ export default class Environment {
     this.debugCoolDown = false;
 
     this.simpleEnvironment();
+    this.setupLighting();
     console.log(this.app.renderer)
   }
 
@@ -27,6 +25,7 @@ export default class Environment {
         color: 0x333333,
         transparent: true,
         opacity: 0.5,
+        side: THREE.DoubleSide
       })
     )
     this.floorMesh.position.y = 5
@@ -36,28 +35,17 @@ export default class Environment {
     console.log(this.physics.world)
   }
 
-  addPortals() {
-    const portalMesh1 =
-      this.environment.scene.getObjectByName("noticeportal001");
-    const portalMesh2 =
-      this.environment.scene.getObjectByName("noticeportal002");
-    const portalMesh3 =
-      this.environment.scene.getObjectByName("noticeportal003");
-
-    const modalContentProvider = new ModalContentProvider();
-
-    this.portal1 = new Portal(
-      portalMesh1,
-      modalContentProvider.getModalInfo("aboutMe")
-    );
-    this.portal2 = new Portal(
-      portalMesh2,
-      modalContentProvider.getModalInfo("projects")
-    );
-    this.portal3 = new Portal(
-      portalMesh3,
-      modalContentProvider.getModalInfo("contactMe")
-    );
+  setupLighting() {
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(0, 10, 3).normalize();
+    light.name = "Directional Light";
+    light.castShadow = true;
+    //Set up shadow properties for the light
+    light.shadow.mapSize.width = 1024; // default
+    light.shadow.mapSize.height = 1024; // default
+    light.shadow.camera.near = 0; // default
+    light.shadow.camera.far = 500; // default
+    this.scene.add(light);
   }
 
   loop() {

@@ -22,7 +22,7 @@ export default class Environment {
     this.floorMesh = new THREE.Mesh(
       new THREE.BoxGeometry(100, 10, 100,4,4,4),
       new THREE.ShadowMaterial({
-        color: 0x333333,
+        color: 0x212121,
         transparent: true,
         opacity: 0.5,
         side: THREE.DoubleSide

@@ -93,23 +93,24 @@ export default class RATK {
     let vertices = new Float32Array(mesh.xrMesh.vertices);
     let indices = new Uint16Array(mesh.xrMesh.indices);
     const geometry = this.createGeometry(vertices, indices);
-    const material = new THREE.MeshBasicMaterial({
+    const occlusionMat = new THREE.MeshBasicMaterial({
       colorWrite: false,
     });
-    const material3 = new THREE.ShadowMaterial({
-      color: 0x333333,
+    const shadowMat = new THREE.ShadowMaterial({
+      color: 0x212121,
       transparent: true,
       opacity: 0.5,
       renderOrder: 3,
+      side: THREE.DoubleSide
     });
 
     // create a buffer geometry
-    const occlusionMesh = new THREE.Mesh(geometry, material);
+    const occlusionMesh = new THREE.Mesh(geometry, occlusionMat);
     occlusionMesh.renderOrder = - Infinity;
     occlusionMesh.position.copy(mesh.position);
     occlusionMesh.quaternion.copy(mesh.quaternion);
     occlusionMesh.name = "Occlusion Mesh";
-    const shadowMesh = new THREE.Mesh(geometry, material3);
+    const shadowMesh = new THREE.Mesh(geometry, shadowMat);
     shadowMesh.position.copy(mesh.position);
     shadowMesh.quaternion.copy(mesh.quaternion);
     shadowMesh.receiveShadow = true;

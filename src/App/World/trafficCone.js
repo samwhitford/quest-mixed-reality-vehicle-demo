@@ -19,20 +19,20 @@ export default class TrafficCone {
     });
 
     this.config = {
-      // position: options.position || [1, 1, 1], // spawn point
       scaleFactor: 0.1,
-      quantity: 5
+      quantity: 6
     };
     this.scale = new THREE.Vector3().setScalar(this.config.scaleFactor)
     this.mesh.scale.copy(this.scale)
     this.mesh.updateMatrixWorld(true);
-
-    this.meshArray = []
+    this.mesh.traverse(function(child){
+      child.castShadow = true;
+    })
 
     for (let i = 0; i < this.config.quantity; i++) {
-      const randomPosX = this.getRandomIntInRange(1,4) - 2
-      const randomPosZ = this.getRandomIntInRange(1,4) - 2
-      this.position = new THREE.Vector3(randomPosX, 0, randomPosZ);
+      const randomPosX = this.getRandomIntInRange(0,3)
+      const randomPosZ = this.getRandomIntInRange(0,3)
+      this.position = new THREE.Vector3(randomPosX, 3, randomPosZ);
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
       this.scene.add(meshClone)
@@ -46,22 +46,10 @@ export default class TrafficCone {
   getRandomIntInRange(min, max) {
       min = Math.ceil(min); // Ensure min is an integer
       max = Math.floor(max); // Ensure max is an integer
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  getBoundingBox(item){
-    const bb = new THREE.Box3().setFromObject(item)
-    const minPoint = bb.min;
-    const maxPoint = bb.max;
-    const bbSize = new THREE.Vector3();
-    bb.getSize(bbSize);
-    return bbSize;
-  }
-
-  centerGeometry(item) {
-    const boundingBox = new THREE.Box3().setFromObject(item.scene);
-    const center = new THREE.Vector3();
-    boundingBox.getCenter(center);
-    item.scene.position.sub(center);
+      let pick = Math.floor(Math.random() * (max - min + 1)) + min;
+      let plusOrMinus = Math.random() < 0.5 ? -1 : 1;
+      let output = pick * plusOrMinus
+      // console.log(output)
+      return output
   }
 }

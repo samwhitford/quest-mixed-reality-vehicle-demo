@@ -50,12 +50,10 @@ export default class Physics {
           dimensions.y / 2,
           dimensions.z / 2
         );
-
         break;
       case "ball":
         const radius = this.computeBallDimensions(mesh);
         colliderType = this.rapier.ColliderDesc.ball(radius);
-
         break;
       case "trimesh":
         const { scaledVertices, indices } = this.computeTrimeshDimensions(mesh);
@@ -63,6 +61,10 @@ export default class Physics {
           scaledVertices,
           indices
         );
+        break;
+      case "convexHull":
+        const vertices = this.computeConvexHullDimensions(mesh);
+        colliderType = this.rapier.ColliderDesc.convexHull(vertices);
         break;
     }
     this.world.createCollider(colliderType, this.rigidBody);
@@ -76,6 +78,38 @@ export default class Physics {
     this.meshMap.set(mesh, this.rigidBody);
 
     return this.rigidBody;
+  }
+
+computeConvexHullDimensions(item) {
+    const vertices = [];
+    // Temporary vector to perform transformations
+    const tempVector = new THREE.Vector3();
+    // This function recursively traverses the item to find all meshes
+    function getMeshVertices(object) {
+      if (object.isMesh) {
+        // Get the position attribute of the mesh's geometry
+        const positionAttribute = object.geometry.getAttribute('position');
+        // Traverse all vertices in the mesh
+        for (let i = 0; i < positionAttribute.count; i++) {
+          tempVector.x = positionAttribute.getX(i);
+          tempVector.y = positionAttribute.getY(i);
+          tempVector.z = positionAttribute.getZ(i);
+          // Set the temporary vector with the local vertex position
+          // Apply the mesh's world transformation to the temporary vector
+          tempVector.applyMatrix4(object.matrixWorld);
+          // Push the transformed vertex coordinates to the main array
+          vertices.push(tempVector.x, tempVector.y, tempVector.z);
+        }
+      }
+      // Recurse through the object's children
+      for (const child of object.children) {
+        getMeshVertices(child);
+      }
+    }
+    // Start the traversal from the top-level item
+    getMeshVertices(item);
+    // Return the combined vertices as a Float32Array
+    return new Float32Array(vertices);
   }
 
   // mesh.geometry.boundingBox is initially null until you run the computeBoundingBox() function.

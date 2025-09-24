@@ -11,6 +11,11 @@ const assetsToLoad = [
     path: "/models/truck/wheel.gltf",
     type: "model",
   },
+  {
+    id: "traffic_cone",
+    path: "/models/traffic_cone.gltf",
+    type: "model",
+  },
 ];
 
 // addLoad function is just adding assets to loadedAssets object once they are loaded

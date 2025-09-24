@@ -7,6 +7,7 @@ import Vehicle from "./Vehicle.js";
 import VehicleController from "./VehicleController.js";
 
 import { appStateStore } from "../Utils/Store.js";
+import TrafficCone from "./trafficCone.js";
 
 
 export default class World {
@@ -19,8 +20,9 @@ export default class World {
     // create world classes
     const unsub = appStateStore.subscribe((state) => {
       if (state.physicsReady && state.assetsReady) {
-        this.vehicle = new Vehicle();
-        this.vehicleController = new VehicleController();
+      this.trafficCone = new TrafficCone();
+      this.vehicle = new Vehicle();
+      this.vehicleController = new VehicleController();
         this.environment = new Environment();
         unsub();
       }

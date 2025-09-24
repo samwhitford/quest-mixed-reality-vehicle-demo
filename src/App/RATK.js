@@ -78,7 +78,7 @@ export default class RATK {
     const environment = new RoomEnvironment(this.instance);
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);
     this.scene.environment = pmremGenerator.fromScene(environment).texture;
-    this.scene.environmentIntensity = 0.2;
+    this.scene.environmentIntensity = 0.1;
   }
 
   createGeometry(vertices, indices) {

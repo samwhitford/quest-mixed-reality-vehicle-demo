@@ -15,17 +15,16 @@ export default class Loop {
     this.loop();
   }
 
-  loop(time, frame) {
+  loop(time,frame) {
     const elapsedTime = this.clock.getElapsedTime();
     const deltaTime = elapsedTime - this.previousElapsedTime;
     this.previousElapsedTime = elapsedTime;
 
     this.world.loop(deltaTime, elapsedTime);
     this.camera.loop();
-    this.ratk.loop(frame);
     this.renderer.loop();
+    if(this.ratk.ratk) this.ratk.loop(frame);
 
-    // window.requestAnimationFrame(() => this.loop());
-    this.renderer.instance.setAnimationLoop((time, frame) => this.loop(time, frame))
+    this.renderer.instance.setAnimationLoop((time,frame) => this.loop(time,frame))
   }
 }

@@ -8,18 +8,27 @@ import { appStateStore, inputStore } from "./Utils/Store.js";
 
 export default class RATK {
   constructor() {
-    this.app = new App();
-    this.scene = this.app.scene;
-    this.physics = this.app.world.physics;
+    this.debugCoolDown = false;
     this.roomScanMesh = null;
-    this.instance = this.app.renderer.instance;
     this.controllers = {
       left: null,
       right: null,
     };
-
-    this.shadowGroup = new THREE.Group();
-    this.occlusionGroup = new THREE.Group();
+    const unsub = appStateStore.subscribe((state) => {
+      if (state.physicsReady && state.assetsReady) {
+        this.app = new App();
+        this.scene = this.app.scene;
+        this.world = this.app.world;
+        this.physics = this.app.world.physics;
+        this.instance = this.app.renderer.instance;
+        this.ratk = new RealityAccelerator(this.instance.xr);
+        this.grabbableObjects = this.world.grabbableObject;
+        this.setupRATK()
+        this.addControllers()
+        console.log(this.ratk)
+        unsub();
+      }
+    });
 
     inputStore.subscribe((state) => {
       this.debug = state.debug;
@@ -27,16 +36,15 @@ export default class RATK {
       this.backward = state.backward;
       this.right = state.right;
       this.left = state.left;
+      this.leftSqueeze = state.leftSqueeze;
+      this.rightSqueeze = state.rightSqueeze;
     });
     appStateStore.subscribe((state) => {
       this.xrActive = state.xrActive;
     });
     this.debugCoolDown = false;
-
-    this.ratk = new RealityAccelerator(this.instance.xr);
-    this.setupRATK()
-    this.addControllers()
-    console.log(this.ratk)
+    this.shadowGroup = new THREE.Group();
+    this.occlusionGroup = new THREE.Group();
   }
 
   setupRATK() {
@@ -74,6 +82,7 @@ export default class RATK {
     this.instance.xr.addEventListener('sessionstart', () => {
       console.log("XR_SESSION_START")
       appStateStore.setState({ xrActive: true });
+      this.app.world.environment.gridHelper.visible = false;
       setTimeout(() => {
         if (this.ratk.planes.size == 0) {
           this.instance.xr.getSession().initiateRoomCapture();
@@ -82,6 +91,7 @@ export default class RATK {
     });
     this.instance.xr.addEventListener('sessionend', () => {
       console.log("XR_SESSION_END")
+      this.app.world.environment.gridHelper.visible = true;
       appStateStore.setState({ xrActive: false });
     });
     const environment = new RoomEnvironment(this.instance);
@@ -131,10 +141,18 @@ export default class RATK {
   addControllers() {
     const controllerModelFactory = new XRControllerModelFactory();
     for (let i = 0; i < 2; i++) {
+      const controllerSphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.08), // Adjust radius to fit your needs
+          new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, visible: false })
+      );
+      const controllerBody = this.physics.world.createRigidBody(this.physics.rapier.RigidBodyDesc.kinematicPositionBased());
       const raySpace = this.instance.xr.getController(i);
       const gripSpace = this.instance.xr.getControllerGrip(i);
       const mesh = controllerModelFactory.createControllerModel(gripSpace);
       gripSpace.add(mesh);
+      gripSpace.add(controllerSphere);
+      gripSpace.userData.collisionSphere = controllerSphere;
+      gripSpace.userData.physicsBody = controllerBody;
       this.scene.add(raySpace, gripSpace);
       raySpace.visible = false;
       gripSpace.visible = false;
@@ -142,6 +160,7 @@ export default class RATK {
         raySpace.visible = true;
         gripSpace.visible = true;
         const handedness = e.data.handedness;
+        gripSpace.userData.hand = handedness;
         this.controllers[handedness] = {
           raySpace,
           gripSpace,
@@ -173,7 +192,15 @@ export default class RATK {
 			}
 		});
     if(this.controllers.right){ // RIGHT HAND
-      const {gamepad, raySpace} = this.controllers.right;
+      const {gamepad, gripSpace, raySpace} = this.controllers.right;
+      const tempPos = new THREE.Vector3();
+      const tempQuat = new THREE.Quaternion();
+      if(this.rightSqueeze){
+        gripSpace.getWorldPosition(tempPos);
+        gripSpace.getWorldQuaternion(tempQuat);
+        gripSpace.userData.physicsBody.setTranslation(tempPos, true);
+        gripSpace.userData.physicsBody.setRotation(tempQuat, true);
+      }
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
         inputStore.setState({ reset: true });
       }
@@ -198,9 +225,19 @@ export default class RATK {
         inputStore.setState({right: false})
         inputStore.setState({left: false})
       }
+      gripSpace.addEventListener('squeezestart', this.onSqueezeStart);
+      gripSpace.addEventListener('squeezeend', this.onSqueezeEnd);
     }
     if(this.controllers.left){ // LEFT HAND
-      const {gamepad, raySpace} = this.controllers.left;
+      const {gamepad, gripSpace, raySpace} = this.controllers.left;
+      const tempPos = new THREE.Vector3();
+      const tempQuat = new THREE.Quaternion();
+      if(this.leftSqueeze){
+        gripSpace.getWorldPosition(tempPos);
+        gripSpace.getWorldQuaternion(tempQuat);
+        gripSpace.userData.physicsBody.setTranslation(tempPos, true);
+        gripSpace.userData.physicsBody.setRotation(tempQuat, true);
+      }
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
         inputStore.setState({ debug: true });
       }
@@ -225,15 +262,61 @@ export default class RATK {
         inputStore.setState({backward: false})
         inputStore.setState({forward: false})
       }
+      gripSpace.addEventListener('squeezestart', this.onSqueezeStart);
+      gripSpace.addEventListener('squeezeend', this.onSqueezeEnd);
     }
     if (this.debug && ! this.debugCoolDown && this.roomScanMesh){
       this.debugCoolDown = true;
       this.roomScanMesh.material.visible = ! this.roomScanMesh.material.visible;
+      this.physics.physicsHelper.visible = ! this.physics.physicsHelper.visible;
       this.shadowGroup.visible = ! this.shadowGroup.visible;
       this.occlusionGroup.visible = ! this.occlusionGroup.visible;
       setTimeout(() => {
         this.debugCoolDown = false;
       }, 300);
     }
+  }
+
+  onSqueezeStart = (event) => {
+    console.log("squeeze")
+    const controller = event.target;
+    if (controller.userData.hand === "left"){
+      inputStore.setState({ leftSqueeze: true });
+    }
+    if (controller.userData.hand === "right"){
+      inputStore.setState({ rightSqueeze: true });
+    }
+    const controllerSphere = controller.userData.collisionSphere;
+    // controllerSphere.material.visible = true;
+    const controllerPosition = new THREE.Vector3();
+    controllerSphere.getWorldPosition(controllerPosition);
+
+    if (this.grabbableObjects && this.grabbableObjects.length > 0) {
+      this.grabbableObjects.forEach((object) => {
+        // Get the bounding box of the object
+        const objectBox = new THREE.Box3().setFromObject(object);
+        // Check for intersection
+        if (objectBox.containsPoint(controllerPosition) || objectBox.distanceToPoint(controllerPosition) < 0.05) {
+          controller.userData.grabbed = object;
+          controller.attach(object);
+          object.userData.isGrabbed = true;
+          return; // Stop after finding the first one
+        }
+      });
+    }
+  }
+
+  onSqueezeEnd = (event) => {
+    const controller = event.target;
+    if (controller.userData.hand === "left"){
+      inputStore.setState({ leftSqueeze: false });
+    }
+    if (controller.userData.hand === "right"){
+      inputStore.setState({ rightSqueeze: false });
+    }
+    const controllerSphere = controller.userData.collisionSphere;
+    controllerSphere.material.visible = false;
+
+    controller.userData.grabbed = null;
   }
 }

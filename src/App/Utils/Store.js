@@ -21,5 +21,7 @@ export const inputStore = createStore(() => ({
   right: false,
   reset: false,
   brake: false,
-  debug: false
+  debug: false,
+  leftSqueeze: false,
+  rightSqueeze: false,
 }));

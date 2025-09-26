@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import App from "../App.js";
-import { appStateStore } from "../Utils/Store.js";
+import { appStateStore, inputStore } from "../Utils/Store.js";
 import { RapierHelper } from 'three/addons/helpers/RapierHelper.js';
+import { element } from "three/tsl";
 
 
 export default class Physics {
@@ -9,9 +10,19 @@ export default class Physics {
     this.app = new App();
     this.scene = this.app.scene;
     this.meshMap = new Map();
+    this.debugCoolDown = false;
+
+    this.previousPosition = new THREE.Vector3();
+    this.linearVelocity = new THREE.Vector3();
+    this.angularVelocity = new THREE.Vector3();
 
     appStateStore.subscribe((state) => {
       this.xrActive = state.xrActive;
+    });
+    inputStore.subscribe((state) => {
+      this.debug = state.debug;
+      this.rightSqueeze = state.rightSqueeze;
+      this.leftSqueeze = state.leftSqueeze;
     });
 
     import("@dimforge/rapier3d").then((RAPIER) => {
@@ -120,10 +131,6 @@ computeConvexHullDimensions(item) {
     return new Float32Array(vertices);
   }
 
-  // mesh.geometry.boundingBox is initially null until you run the computeBoundingBox() function.
-  // The getSize function is a bit unusual: it requires a vector as an argument and then returns the updated vector.
-  // It would be more convenient if it directly returned the result, but it needs a Vector input.
-  // We need getWorldScale because scaling the geometry directly can cause incorrect physics behavior.
   computeCuboidDimensions(mesh) {
     mesh.geometry.computeBoundingBox();
     const size = mesh.geometry.boundingBox.getSize(new THREE.Vector3());
@@ -162,24 +169,164 @@ computeConvexHullDimensions(item) {
       this.physicsHelper.update();
     }
 
-    this.meshMap.forEach((rigidBody, mesh) => {
-      const position = new THREE.Vector3().copy(rigidBody.translation());
-      const rotation = new THREE.Quaternion().copy(rigidBody.rotation());
+    if (this.xrActive) this.physicsHelper.visible = false;
 
-      // for position
-      mesh.parent.worldToLocal(position);
+    if(this.debug && ! this.debugCoolDown && ! this.xrActive){
+      this.debugCoolDown  = true;
+      this.physicsHelper.visible = ! this.physicsHelper.visible;
+      setTimeout(() => {
+        this.debugCoolDown = false;
+      }, 300);
+    }
+    this.meshPhysicsSync();
+  }
 
-      // for rotation
-      const inverseParentMatrix = new THREE.Matrix4()
+  meshPhysicsSync(){
+    this.meshMap.forEach((body, mesh) => {
+      // Swapped Synchronization for a Grabbed Object
+      if (mesh.userData.isGrabbed){
+        this.handleGrabPhysics(mesh, body)
+      } else {
+        const position = new THREE.Vector3().copy(body.translation());
+        const rotation = new THREE.Quaternion().copy(body.rotation());
+        // for position
+        mesh.parent.worldToLocal(position);
+        // for rotation
+        const inverseParentMatrix = new THREE.Matrix4()
         .extractRotation(mesh.parent.matrixWorld)
         .invert();
-      const inverseParentRotation =
-        new THREE.Quaternion().setFromRotationMatrix(inverseParentMatrix);
-
-      rotation.premultiply(inverseParentRotation);
-
-      mesh.position.copy(position);
-      mesh.quaternion.copy(rotation);
+        const inverseParentRotation = new THREE.Quaternion().setFromRotationMatrix(inverseParentMatrix);
+        rotation.premultiply(inverseParentRotation);
+        mesh.position.copy(position);
+        mesh.quaternion.copy(rotation);
+      }
     });
   }
+
+  handleGrabPhysics(mesh, body) {
+    let isGrabbing = false;
+    const controller = mesh.parent; // The controller is the current parent (either left or right)
+    if (this.leftSqueeze && controller.userData.hand === "left"){
+      isGrabbing = true;
+    }
+    if (this.rightSqueeze && controller.userData.hand === "right"){
+      isGrabbing = true;
+    }
+    if (isGrabbing) {
+      console.log("grabbing")
+      // A. GRAB MODE (Holding the object)
+      // 1. Ensure body is Kinematic
+      if (body.bodyType() !== this.rapier.RigidBodyType.KinematicPositionBased) {
+          body.setBodyType(this.rapier.RigidBodyType.KinematicPositionBased);
+      }
+      // 2. Swap Synchronization (Mesh -> Body)
+      this.updateGrabbedObjectPhysics(mesh, body);
+      // 3. Track velocity for throwing
+      this.trackControllerVelocity(controller);
+    } else {
+      console.log("releasing")
+      // B. RELEASE MODE (isGrabbing is false, but grabbedObject is still set for cleanup)
+      // 1. Ensure body is Dynamic
+      if (body.bodyType() !== this.rapier.RigidBodyType.Dynamic) {
+        body.setEnabled(false);
+        body.setBodyType(this.rapier.RigidBodyType.Dynamic);
+        body.setEnabled(true);
+      }
+      this.meshMap.set(mesh, body);
+      // 2. Apply Throw Impulse
+      this.applyThrowImpulse(body);
+      // re-parent mesh
+      this.scene.attach(mesh);
+      // 3. Cleanup State (The final step)
+      mesh.userData.isGrabbed = false;
+    }
+  }
+
+  updateGrabbedObjectPhysics(mesh, body) {
+    const worldPosition = new THREE.Vector3();
+    const worldQuaternion = new THREE.Quaternion();
+    // Get the final world pose of the mesh (which is following the controller)
+    mesh.getWorldPosition(worldPosition);
+    mesh.getWorldQuaternion(worldQuaternion);
+    // Write the world position/rotation back to the Rapier rigid body.
+    // Update Position (Translation)
+    body.setTranslation(
+        new this.rapier.Vector3(worldPosition.x, worldPosition.y, worldPosition.z),
+        true // Wake up the body
+    );
+    // Update Rotation
+    body.setRotation(
+        {
+            x: worldQuaternion.x,
+            y: worldQuaternion.y,
+            z: worldQuaternion.z,
+            w: worldQuaternion.w
+        },
+        true // Wake up the body
+    );
+    // Stop physics forces from moving it
+    const zeroVector = new this.rapier.Vector3(0, 0, 0);
+    body.setLinvel(zeroVector, true);
+    body.setAngvel(zeroVector, true);
+  }
+
+  trackControllerVelocity(controller) {
+    const currentPosition = new THREE.Vector3();
+    const currentQuaternion = new THREE.Quaternion();
+
+    // Get current world position and rotation of the controller
+    controller.getWorldPosition(currentPosition);
+    controller.getWorldQuaternion(currentQuaternion);
+
+    // 1. Calculate Linear Velocity (Position Delta / Time Delta)
+    if (!this.previousPosition.equals(new THREE.Vector3())) {
+        this.linearVelocity.subVectors(currentPosition, this.previousPosition)
+            .divideScalar(this.world.timestep);
+    }
+
+    // 2. Simple Angular Velocity (Just track the current rotation)
+    // A more accurate method uses delta rotation, but this is a simple proxy for the release direction.
+    // For throwing, we often only need the linear velocity.
+    // We'll set the angular velocity to the final rotation difference here for simplicity.
+    this.angularVelocity.set(currentQuaternion.x, currentQuaternion.y, currentQuaternion.z);
+
+    // 3. Store current position for the next frame
+    this.previousPosition.copy(currentPosition);
+  }
+
+  applyThrowImpulse(body) {
+    const throwFactor = 1.5;
+
+    // Apply Linear Impulse (Throw speed/direction)
+    // Impulse = Mass * Velocity
+    body.applyImpulse(
+        new this.rapier.Vector3(
+            this.linearVelocity.x * body.mass() * throwFactor,
+            this.linearVelocity.y * body.mass() * throwFactor,
+            this.linearVelocity.z * body.mass() * throwFactor
+        ),
+        true // Wake up the body
+    );
+
+    // Apply Angular Impulse (Spin/Toss)
+    // Since we used a simplified angular tracking, we'll apply it as torque impulse
+    // to give the released object some spin, matching the controller's final rotation.
+    body.applyTorqueImpulse(
+        new this.rapier.Vector3(
+            // this.angularVelocity.x * body.mass() * throwFactor,
+            // this.angularVelocity.y * body.mass() * throwFactor,
+            // this.angularVelocity.z * body.mass() * throwFactor
+            this.angularVelocity.x * body.mass() * 0.01,
+            this.angularVelocity.y * body.mass() * 0.01,
+            this.angularVelocity.z * body.mass() * 0.01
+        ),
+        true
+    );
+
+    // Reset velocity trackers after the throw
+    this.previousPosition.set(0, 0, 0);
+    this.linearVelocity.set(0, 0, 0);
+    this.angularVelocity.set(0, 0, 0);
+  }
+
 }

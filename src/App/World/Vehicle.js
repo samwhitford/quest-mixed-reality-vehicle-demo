@@ -141,22 +141,24 @@ export default class Vehicle {
         visible: false,
       });
       const wheelMesh = new THREE.Mesh(wheelGeom, wheelMat);
-      wheelMesh.add(this.wheel.scene.clone());
+
+      // const wheelPivot = new THREE.Object3D();
+      const wheelModel = this.wheel.scene.clone();
       if (i === 0 || i === 2) {
-        wheelMesh.children[0].rotation.y = Math.PI;
+        wheelModel.rotation.y = Math.PI;
       }
-      // console.log(wheelMesh);
+      // wheelModel.rotation.z = Math.PI / 2;
+      wheelMesh.add(wheelModel);
+
       scene.add(wheelMesh);
       this.wheelMeshes.push(wheelMesh);
     });
   }
 
 loop(dt) {
-    this.controller.updateVehicle(dt);
-
     if(this.debug && ! this.debugCoolDown){
       this.debugCoolDown  = true;
-      this.chassisMesh.material.visible = ! this.chassisMesh.material.visible
+      this.chassisMesh.material.visible = ! this.chassisMesh.material.visible;
       this.wheelMeshes.forEach((mesh) => {
         mesh.material.visible = ! mesh.material.visible;
       });
@@ -164,7 +166,7 @@ loop(dt) {
         this.debugCoolDown = false;
       }, 300);
     }
-    this.syncPhysicsAndMesh();
+    this.syncPhysicsAndMesh(dt);
     this.antennaUpdate(dt);
   }
 
@@ -187,23 +189,34 @@ loop(dt) {
       this.antenna.update(dt, this.smoothedAccel, carQuat);
   }
 
-  syncPhysicsAndMesh() {
+  syncPhysicsAndMesh(dt) {
+    this.controller.updateVehicle(dt);
     // Sync chassis mesh to the physics body
+    const chassisVelocity = new THREE.Vector3(
+      this.chassisBody.linvel().x,
+      this.chassisBody.linvel().y,
+      this.chassisBody.linvel().z
+    )
     const chassisTransform = this.chassisBody.translation();
     const chassisRotation = this.chassisBody.rotation();
     this.chassisMesh.position.set(chassisTransform.x, chassisTransform.y, chassisTransform.z);
     this.chassisMesh.quaternion.set(chassisRotation.x, chassisRotation.y, chassisRotation.z, chassisRotation.w);
+
+    const localForward = new THREE.Vector3(0, 0, 1);
+    localForward.applyQuaternion(chassisRotation);
+    const forwardSpeed = chassisVelocity.dot(localForward);
 
     // Sync wheels to meshes
     this.wheelMeshes.forEach((mesh, i) => {
         const chassisPosition = this.chassisBody.translation();
         const chassisQuaternion = this.chassisBody.rotation();
 
-        const wheelSuspensionLength = this.controller.wheelSuspensionLength(i);
+        const wheelSuspensionLength = this.controller.wheelSuspensionLength(i) || 0;
         const wheelChassisConnectionPointCs = this.controller.wheelChassisConnectionPointCs(i);
-        const wheelSteering = this.controller.wheelSteering(i);
-        const wheelRotation = this.controller.wheelRotation(i);
-        const wheelAxleCs = this.controller.wheelAxleCs(i);
+        const wheelSteering = this.controller.wheelSteering(i) || 0;
+        // const wheelRotation = this.controller.wheelRotation(i) || 0;
+        let wheelRotation;
+        // const wheelAxleCs = this.controller.wheelAxleCs(i);
 
         // Position
         const wheelPosition = new THREE.Vector3(wheelChassisConnectionPointCs.x, wheelChassisConnectionPointCs.y, wheelChassisConnectionPointCs.z);
@@ -211,8 +224,7 @@ loop(dt) {
         wheelPosition.add(suspensionOffset);
 
         // Apply chassis rotation to the wheel's local position and add chassis world position
-        const chassisQuaternionThree = new THREE.Quaternion(chassisRotation.x, chassisRotation.y, chassisRotation.z, chassisRotation.w);
-        wheelPosition.applyQuaternion(chassisQuaternionThree);
+        wheelPosition.applyQuaternion(chassisQuaternion);
         wheelPosition.add(new THREE.Vector3(chassisPosition.x, chassisPosition.y, chassisPosition.z));
         mesh.position.copy(wheelPosition);
 
@@ -220,26 +232,18 @@ loop(dt) {
         // The final quaternion for the wheel mesh
         const finalQuaternion = new THREE.Quaternion();
 
-        // 1. Start with the chassis's world rotation
-        finalQuaternion.copy(chassisQuaternionThree);
-
-        // 2. Apply the steering rotation around the Y-axis (local to the chassis)
+        // steering rotation around the Y-axis (local to the chassis)
         const steeringQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), wheelSteering);
-        finalQuaternion.multiply(steeringQuaternion);
 
-        //
-        // TODO FIX rolling rotation for the wheel meshes (approach below not working correctly)
-        //
-        // 3. Apply the rolling rotation around the axle axis (local to the wheel).
-        // The wheel's local axle is defined by the `wheelAxleCs` from Rapier.
-        // This vector is pre-rotated by the steering and chassis quaternions.
-
-        // const rollingQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(wheelAxleCs.x, wheelAxleCs.y, wheelAxleCs.z), wheelRotation);
-
-        // Now, this is the most critical change: we multiply the final quaternion by the rolling quaternion.
-        // This applies the rolling rotation after the chassis and steering rotations have been accounted for.
-
-        // finalQuaternion.multiply(rollingQuaternion);
+        // rotation quaternion
+        const deltaRotation = (Math.abs(forwardSpeed) * (dt * 10)) / this.controller.wheelRadius(i);
+        wheelRotation =+ deltaRotation
+        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-1, 0, 0), -wheelRotation);
+        // console.log(wheelRotation)
+        finalQuaternion
+        .copy(chassisQuaternion)
+        .multiply(steeringQuaternion)
+        .multiply(rotationQuaternion)
 
         // Apply the final computed quaternion to the mesh
         mesh.quaternion.copy(finalQuaternion);

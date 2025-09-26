@@ -31,28 +31,21 @@ export default class TrafficCone {
     })
 
     for (let i = 0; i < this.config.quantity; i++) {
-      const randomPosX = this.getRandomIntInRange(0,3);
-      const randomPosZ = this.getRandomIntInRange(0,3);
+      const randomPosX = this.getRandomIntInRange(0.2,1.5);
+      const randomPosZ = this.getRandomIntInRange(0.2,1.5);
       this.position = new THREE.Vector3(randomPosX, 3, randomPosZ);
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
       this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
-      // this.meshArray.push(this.physics.meshMap.get(meshClone));
       this.meshArray.push(meshClone);
     }
   }
 
-// loop(dt) {
-
-//   }
   getRandomIntInRange(min, max) {
-      min = Math.ceil(min); // Ensure min is an integer
-      max = Math.floor(max); // Ensure max is an integer
       let pick = Math.floor(Math.random() * (max - min + 1)) + min;
       let plusOrMinus = Math.random() < 0.5 ? -1 : 1;
       let output = pick * plusOrMinus
-      // console.log(output)
       return output
   }
 }

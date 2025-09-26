@@ -11,6 +11,7 @@ export const appStateStore = createStore(() => ({
   assetsReady: false,
   pressedStart: false,
   xrButtonExists: false,
+  xrActive: false,
 }));
 
 export const inputStore = createStore(() => ({

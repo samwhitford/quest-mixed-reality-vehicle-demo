@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import App from "../App.js";
-import { inputStore } from "../Utils/Store.js";
+import { appStateStore, inputStore } from "../Utils/Store.js";
 
 export default class Environment {
   constructor() {
@@ -10,6 +10,9 @@ export default class Environment {
 
     inputStore.subscribe((state) => {
       this.debug = state.debug;
+    });
+    appStateStore.subscribe((state) => {
+      this.xrActive = state.xrActive;
     });
     this.debugCoolDown = false;
 
@@ -52,6 +55,9 @@ export default class Environment {
     if (this.debug && ! this.debugCoolDown){
       this.debugCoolDown = true;
       this.floorMesh.material.visible = ! this.floorMesh.material.visible;
+      if (! this.xrActive){
+        this.physics.physicsHelper.visible = ! this.physics.physicsHelper.visible;
+      }
       setTimeout(() => {
         this.debugCoolDown = false;
       }, 300);

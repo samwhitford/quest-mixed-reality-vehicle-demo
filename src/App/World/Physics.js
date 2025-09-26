@@ -10,6 +10,10 @@ export default class Physics {
     this.scene = this.app.scene;
     this.meshMap = new Map();
 
+    appStateStore.subscribe((state) => {
+      this.xrActive = state.xrActive;
+    });
+
     import("@dimforge/rapier3d").then((RAPIER) => {
       const gravity = { x: 0, y: -9.81, z: 0 };
       this.world = new RAPIER.World(gravity);
@@ -151,12 +155,12 @@ computeConvexHullDimensions(item) {
     // Update the ThreeJS Mesh According to Physics World Object
     if (!this.rapierLoaded) return;
 
-    if ( this.physicsHelper ) {
-      this.physicsHelper.update();
-    }
-
     this.world.timestep = deltaTime;
     this.world.step();
+
+    if ( this.physicsHelper && ! this.xrActive ) {
+      this.physicsHelper.update();
+    }
 
     this.meshMap.forEach((rigidBody, mesh) => {
       const position = new THREE.Vector3().copy(rigidBody.translation());

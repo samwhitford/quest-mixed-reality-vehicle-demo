@@ -4,7 +4,7 @@ import { RealityAccelerator } from 'ratk';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { GamepadWrapper, XR_BUTTONS, AXES } from 'gamepad-wrapper';
-import { inputStore } from "./Utils/Store.js";
+import { appStateStore, inputStore } from "./Utils/Store.js";
 
 export default class RATK {
   constructor() {
@@ -27,6 +27,9 @@ export default class RATK {
       this.backward = state.backward;
       this.right = state.right;
       this.left = state.left;
+    });
+    appStateStore.subscribe((state) => {
+      this.xrActive = state.xrActive;
     });
     this.debugCoolDown = false;
 
@@ -69,11 +72,17 @@ export default class RATK {
     this.ratk.root.visible = true;
     this.scene.add(this.ratk.root, this.shadowGroup, this.occlusionGroup);
     this.instance.xr.addEventListener('sessionstart', () => {
+      console.log("XR_SESSION_START")
+      appStateStore.setState({ xrActive: true });
       setTimeout(() => {
         if (this.ratk.planes.size == 0) {
           this.instance.xr.getSession().initiateRoomCapture();
         }
       }, 5000);
+    });
+    this.instance.xr.addEventListener('sessionend', () => {
+      console.log("XR_SESSION_END")
+      appStateStore.setState({ xrActive: false });
     });
     const environment = new RoomEnvironment(this.instance);
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);

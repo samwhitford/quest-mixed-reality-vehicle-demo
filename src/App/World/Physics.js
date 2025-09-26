@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import App from "../App.js";
 import { appStateStore } from "../Utils/Store.js";
+import { RapierHelper } from 'three/addons/helpers/RapierHelper.js';
+
 
 export default class Physics {
   constructor() {
     this.app = new App();
     this.scene = this.app.scene;
-
     this.meshMap = new Map();
 
     import("@dimforge/rapier3d").then((RAPIER) => {
@@ -16,6 +17,9 @@ export default class Physics {
 
       this.rapierLoaded = true;
       appStateStore.setState({ physicsReady: true });
+      this.physicsHelper = new RapierHelper(this.world);
+      this.physicsHelper.visible = false;
+      this.scene.add(this.physicsHelper);
     });
   }
 
@@ -146,6 +150,10 @@ computeConvexHullDimensions(item) {
   loop(deltaTime) {
     // Update the ThreeJS Mesh According to Physics World Object
     if (!this.rapierLoaded) return;
+
+    if ( this.physicsHelper ) {
+      this.physicsHelper.update();
+    }
 
     this.world.timestep = deltaTime;
     this.world.step();

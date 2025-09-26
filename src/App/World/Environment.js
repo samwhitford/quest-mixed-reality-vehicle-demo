@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import App from "../App.js";
 import { appStateStore, inputStore } from "../Utils/Store.js";
+import  {InfiniteGridHelper} from "../Utils/InfiniteGrid.js";
 
 export default class Environment {
   constructor() {
@@ -35,6 +36,14 @@ export default class Environment {
     this.floorMesh.receiveShadow = true
     this.scene.add(this.floorMesh)
     this.physics.add(this.floorMesh, "fixed", "trimesh");
+    this.gridHelper = new InfiniteGridHelper(
+      0.25,
+      10,
+      new THREE.Color(0x4f4f4f),
+      50
+    );
+    this.gridHelper.position.setY(-0.001)
+    this.scene.add(this.gridHelper);
     console.log(this.physics.world)
   }
 
@@ -54,9 +63,9 @@ export default class Environment {
   loop() {
     if (this.debug && ! this.debugCoolDown){
       this.debugCoolDown = true;
-      this.floorMesh.material.visible = ! this.floorMesh.material.visible;
       if (! this.xrActive){
-        this.physics.physicsHelper.visible = ! this.physics.physicsHelper.visible;
+        this.floorMesh.material.visible = ! this.floorMesh.material.visible;
+        this.gridHelper.visible = ! this.gridHelper.visible;
       }
       setTimeout(() => {
         this.debugCoolDown = false;

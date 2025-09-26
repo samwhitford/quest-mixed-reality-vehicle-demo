@@ -13,6 +13,7 @@ export default class TrafficCone {
     this.mesh = this.trafficCone.scene;
     this.world = this.app.world
     this.physics = this.app.world.physics;
+    this.meshArray = []
 
     inputStore.subscribe((state) => {
       this.debug = state.debug;
@@ -30,13 +31,15 @@ export default class TrafficCone {
     })
 
     for (let i = 0; i < this.config.quantity; i++) {
-      const randomPosX = this.getRandomIntInRange(0,3)
-      const randomPosZ = this.getRandomIntInRange(0,3)
+      const randomPosX = this.getRandomIntInRange(0,3);
+      const randomPosZ = this.getRandomIntInRange(0,3);
       this.position = new THREE.Vector3(randomPosX, 3, randomPosZ);
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
-      this.scene.add(meshClone)
+      this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
+      // this.meshArray.push(this.physics.meshMap.get(meshClone));
+      this.meshArray.push(meshClone);
     }
   }
 

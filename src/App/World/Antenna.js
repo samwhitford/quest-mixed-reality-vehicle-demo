@@ -47,6 +47,34 @@ export class AntennaRig {
       prevBone = bone;
     }
 
+    // --- 2a. add ball to end of antenna ---
+
+        // Get the very last bone, which represents the tip of the antenna
+    const tipBone = this.bones[this.bones.length - 1];
+
+    // 1. Define the size and create the sphere geometry
+    const sphereRadius = this.topradius * 2.5; // Make the sphere a bit larger than the antenna tip
+    const sphereGeo = new THREE.SphereGeometry(sphereRadius, 16, 16);
+
+    // 2. Create a material for the sphere
+    const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff2800 }); // e.g., bright red
+
+    // 3. Create the mesh
+    this.sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+
+    // Position the sphere: it needs to be offset by its own radius
+    // since the tipBone's position is the *start* of the last segment's space.
+    // The previous bone (prevBone) had `segmentHeight` added to its Y position,
+    // so `tipBone` is effectively at the top of the antenna.
+    // Set the sphere to be at y=0 relative to the tipBone's position,
+    // which is the end of the last bone segment.
+    this.sphereMesh.position.set(0, 0, 0);
+
+    // 4. Attach the sphere mesh to the tip bone
+    tipBone.add(this.sphereMesh);
+
+    // ---
+
     const skeleton = new THREE.Skeleton(this.bones);
 
     // --- 3. Skin indices & weights ---

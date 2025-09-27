@@ -11,6 +11,7 @@ export default class TrafficCone {
     this.assetStore = assetStore.getState();
     this.trafficCone = this.assetStore.loadedAssets.traffic_cone;
     this.mesh = this.trafficCone.scene;
+    console.log(this.mesh)
     this.world = this.app.world
     this.physics = this.app.world.physics;
     this.meshArray = []
@@ -31,21 +32,23 @@ export default class TrafficCone {
     })
 
     for (let i = 0; i < this.config.quantity; i++) {
-      const randomPosX = this.getRandomIntInRange(0.2,1.5);
-      const randomPosZ = this.getRandomIntInRange(0.2,1.5);
-      this.position = new THREE.Vector3(randomPosX, 3, randomPosZ);
+      this.position = new THREE.Vector3();
+      let check = i + 1;
+      if (check % 2 !== 0) {
+        this.position.setX(-0.5);
+        this.position.setY(2);
+        this.position.setZ(-0.5 * (check + 0.25));
+      } else {
+        this.position.setX(0.5);
+        this.position.setY(2);
+        this.position.setZ(-0.5 * ((check - 1 ) + 0.25));
+      }
+      console.log(this.position)
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
       this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
       this.meshArray.push(meshClone);
     }
-  }
-
-  getRandomIntInRange(min, max) {
-      let pick = Math.floor(Math.random() * (max - min + 1)) + min;
-      let plusOrMinus = Math.random() < 0.5 ? -1 : 1;
-      let output = pick * plusOrMinus
-      return output
   }
 }

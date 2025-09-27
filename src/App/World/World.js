@@ -6,6 +6,7 @@ import Environment from "./Environment.js";
 import Vehicle from "./Vehicle.js";
 import VehicleController from "./VehicleController.js";
 import TrafficCone from "./trafficCone.js";
+import Ramp from "./ramp.js";
 
 import { appStateStore } from "../Utils/Store.js";
 
@@ -21,6 +22,8 @@ export default class World {
       if (state.physicsReady && state.assetsReady) {
         this.trafficCone = new TrafficCone();
         this.grabbableObject.push(...this.trafficCone.meshArray)
+        this.Ramp = new Ramp();
+        this.grabbableObject.push(...this.Ramp.meshArray)
         this.vehicle = new Vehicle();
         // this.grabbableObject.push(this.vehicle.chassisMesh)
         this.vehicleController = new VehicleController();

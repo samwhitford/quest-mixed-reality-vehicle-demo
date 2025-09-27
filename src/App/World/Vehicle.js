@@ -40,16 +40,28 @@ export default class Vehicle {
       maxSuspensionTravel: 0.5,
       suspensionDamping: 20.0,
       chassisMass: options.chassisMass || 8,
-      position: options.position || [0, 2, 0], // spawn point
+      position: options.position || [0, 2, -1], // spawn point
+      rotation: new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), // Y-axis
+        Math.PI                      // 180 degrees
+      )
     };
 
     // --- Chassis physics body ---
-    const chassisDesc = this.world.physics.rapier.RigidBodyDesc.dynamic().setTranslation(
-      this.config.position[0],
-      this.config.position[1],
-      this.config.position[2]
-    )
-    .setCanSleep(false);
+    // Create a Three.js Quaternion
+    const chassisDesc = this.world.physics.rapier.RigidBodyDesc.dynamic()
+      .setTranslation(
+        this.config.position[0],
+        this.config.position[1],
+        this.config.position[2]
+      )
+      .setRotation({
+        x: this.config.rotation.x,
+        y: this.config.rotation.y,
+        z: this.config.rotation.z,
+        w: this.config.rotation.w,
+      })
+      .setCanSleep(false);
 
     this.chassisBody = this.physics.world.createRigidBody(chassisDesc);
 

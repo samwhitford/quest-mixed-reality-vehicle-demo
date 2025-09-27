@@ -75,8 +75,22 @@ export default class VehicleController {
 
     if (this.reset){
       this.app.world.physics.rapier.Vector3
-      this.vehicle.chassisBody.setTranslation( new this.app.world.physics.rapier.Vector3( 0, 1, 0 ), true );
-      this.vehicle.chassisBody.setRotation( new this.app.world.physics.rapier.Quaternion( 0, 0, 0, 1 ), true );
+      this.vehicle.chassisBody.setTranslation(
+        new this.app.world.physics.rapier.Vector3(
+          this.app.world.vehicle.config.position[0],
+          this.app.world.vehicle.config.position[1],
+          this.app.world.vehicle.config.position[2],
+        ),
+        true
+      );
+      this.vehicle.chassisBody.setRotation(
+        new this.app.world.physics.rapier.Quaternion(
+          this.app.world.vehicle.config.rotation.x,
+          this.app.world.vehicle.config.rotation.y,
+          this.app.world.vehicle.config.rotation.z,
+          this.app.world.vehicle.config.rotation.w,
+        ), true
+      );
       this.vehicle.chassisBody.setLinvel( new this.app.world.physics.rapier.Vector3( 0, 0, 0 ), true );
       this.vehicle.chassisBody.setAngvel( new this.app.world.physics.rapier.Vector3( 0, 0, 0 ), true );
 

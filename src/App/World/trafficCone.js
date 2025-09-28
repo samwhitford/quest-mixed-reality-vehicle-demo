@@ -51,6 +51,7 @@ export default class TrafficCone {
       meshClone.userData.originalRot = this.config.rotation;
       this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
+      this.physics.meshMap.get(meshClone).setSoftCcdPrediction(1);
       this.meshArray.push(meshClone);
     }
   }

@@ -31,6 +31,9 @@ export default class Physics {
       this.world = new RAPIER.World(gravity);
       this.rapier = RAPIER;
 
+      this.world.maxVelocityIterations = 8;
+      this.world.maxPositionIterations = 8;
+
       this.rapierLoaded = true;
       appStateStore.setState({ physicsReady: true });
       this.physicsHelper = new RapierHelper(this.world);

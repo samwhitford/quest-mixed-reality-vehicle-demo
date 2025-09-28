@@ -25,7 +25,6 @@ export default class VehicleController {
       forward: 0,
       right: 0,
       brake: 0,
-      reset: false,
       accelerateForce: { value: 0, min: -10, max: 10, step: 0.25 },
       brakeForce: { value: 0.05, min: 0, max: 1, step: 0.002 },
       steerAngle: { value: Math.PI / 24, min: 0, max: Math.PI / 12 },
@@ -74,7 +73,6 @@ export default class VehicleController {
     }
 
     if (this.reset){
-      this.app.world.physics.rapier.Vector3
       this.vehicle.chassisBody.setTranslation(
         new this.app.world.physics.rapier.Vector3(
           this.app.world.vehicle.config.position[0],

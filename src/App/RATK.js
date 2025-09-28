@@ -208,7 +208,10 @@ export default class RATK {
         inputStore.setState({ reset: false });
       }
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_2)){ // B button
-        console.log('clicked B')
+        inputStore.setState({ resetObjects: true });
+      }
+      if(gamepad.getButtonUp(XR_BUTTONS.BUTTON_2)){ // B button
+        inputStore.setState({ resetObjects: false });
       }
       const thumbstickValueX = gamepad.getAxis(
         AXES.XR_STANDARD.THUMBSTICK_X,

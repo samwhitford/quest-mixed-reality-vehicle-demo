@@ -23,6 +23,7 @@ export default class Physics {
       this.debug = state.debug;
       this.rightSqueeze = state.rightSqueeze;
       this.leftSqueeze = state.leftSqueeze;
+      this.resetObjects = state.resetObjects;
     });
 
     import("@dimforge/rapier3d").then((RAPIER) => {
@@ -183,6 +184,25 @@ computeConvexHullDimensions(item) {
 
   meshPhysicsSync(){
     this.meshMap.forEach((body, mesh) => {
+      if (this.resetObjects && body.bodyType() == this.rapier.RigidBodyType.Dynamic){
+        body.setTranslation(
+          new this.rapier.Vector3(
+            mesh.userData.originalPos.x,
+            mesh.userData.originalPos.y,
+            mesh.userData.originalPos.z,
+          ),
+          true
+        );
+        body.setRotation(
+          new this.rapier.Quaternion(
+            mesh.userData.originalRot.x,
+            mesh.userData.originalRot.y,
+            mesh.userData.originalRot.z,
+            mesh.userData.originalRot.w,
+          ), true
+        );
+        return;
+      }
       // Swapped Synchronization for a Grabbed Object
       if (mesh.userData.isGrabbed){
         this.handleGrabPhysics(mesh, body)
@@ -296,7 +316,6 @@ computeConvexHullDimensions(item) {
 
   applyThrowImpulse(body) {
     const throwFactor = 1.5;
-
     // Apply Linear Impulse (Throw speed/direction)
     // Impulse = Mass * Velocity
     body.applyImpulse(
@@ -307,22 +326,15 @@ computeConvexHullDimensions(item) {
         ),
         true // Wake up the body
     );
-
     // Apply Angular Impulse (Spin/Toss)
-    // Since we used a simplified angular tracking, we'll apply it as torque impulse
-    // to give the released object some spin, matching the controller's final rotation.
     body.applyTorqueImpulse(
         new this.rapier.Vector3(
-            // this.angularVelocity.x * body.mass() * throwFactor,
-            // this.angularVelocity.y * body.mass() * throwFactor,
-            // this.angularVelocity.z * body.mass() * throwFactor
             this.angularVelocity.x * body.mass() * 0.01,
             this.angularVelocity.y * body.mass() * 0.01,
             this.angularVelocity.z * body.mass() * 0.01
         ),
         true
     );
-
     // Reset velocity trackers after the throw
     this.previousPosition.set(0, 0, 0);
     this.linearVelocity.set(0, 0, 0);

@@ -20,6 +20,7 @@ export const inputStore = createStore(() => ({
   left: false,
   right: false,
   reset: false,
+  resetObjects: false,
   brake: false,
   debug: false,
   leftSqueeze: false,

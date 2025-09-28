@@ -22,7 +22,9 @@ export default class TrafficCone {
 
     this.config = {
       scaleFactor: 0.1,
-      quantity: 6
+      quantity: 6,
+      position: new THREE.Vector3(), // spawn point
+      rotation: new THREE.Quaternion()
     };
     this.scale = new THREE.Vector3().setScalar(this.config.scaleFactor)
     this.mesh.scale.copy(this.scale)
@@ -43,9 +45,10 @@ export default class TrafficCone {
         this.position.setY(2);
         this.position.setZ(-0.5 * ((check - 1 ) + 0.25));
       }
-      console.log(this.position)
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
+      meshClone.userData.originalPos = this.position;
+      meshClone.userData.originalRot = this.config.rotation;
       this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
       this.meshArray.push(meshClone);

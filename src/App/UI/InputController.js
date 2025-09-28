@@ -40,6 +40,9 @@ export default class InputController {
       case "KeyR":
         inputStore.setState({ reset: true });
         break;
+      case "KeyT":
+        inputStore.setState({ resetObjects: true });
+        break;
       case "KeyX":
         inputStore.setState({ debug: true });
         break;
@@ -70,6 +73,9 @@ export default class InputController {
         break;
       case "KeyR":
         inputStore.setState({ reset: false });
+        break;
+      case "KeyT":
+        inputStore.setState({ resetObjects: false });
         break;
       case "KeyX":
         inputStore.setState({ debug: false });

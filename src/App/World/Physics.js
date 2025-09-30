@@ -255,7 +255,6 @@ computeConvexHullDimensions(item) {
         body.setBodyType(this.rapier.RigidBodyType.Dynamic);
         body.setEnabled(true);
       }
-      this.meshMap.set(mesh, body);
       // 2. Apply Throw Impulse
       this.applyThrowImpulse(body);
       // re-parent mesh

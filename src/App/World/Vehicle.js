@@ -202,18 +202,23 @@ loop(dt) {
   }
 
   syncPhysicsAndMesh(dt) {
-    this.controller.updateVehicle(dt);
-    // Sync chassis mesh to the physics body
+    if (this.chassisMesh.userData.isGrabbed){
+      this.physics.handleGrabPhysics(this.chassisMesh, this.chassisBody);
+    }else{
+      this.controller.updateVehicle(dt);
+      // Sync chassis mesh to the physics body
+      const chassisTransform = this.chassisBody.translation();
+      const chassisRotation = this.chassisBody.rotation();
+      this.chassisMesh.position.set(chassisTransform.x, chassisTransform.y, chassisTransform.z);
+      this.chassisMesh.quaternion.set(chassisRotation.x, chassisRotation.y, chassisRotation.z, chassisRotation.w);
+    }
+
+    const chassisRotation = this.chassisBody.rotation();
     const chassisVelocity = new THREE.Vector3(
       this.chassisBody.linvel().x,
       this.chassisBody.linvel().y,
       this.chassisBody.linvel().z
     )
-    const chassisTransform = this.chassisBody.translation();
-    const chassisRotation = this.chassisBody.rotation();
-    this.chassisMesh.position.set(chassisTransform.x, chassisTransform.y, chassisTransform.z);
-    this.chassisMesh.quaternion.set(chassisRotation.x, chassisRotation.y, chassisRotation.z, chassisRotation.w);
-
     const localForward = new THREE.Vector3(0, 0, 1);
     localForward.applyQuaternion(chassisRotation);
     const forwardSpeed = chassisVelocity.dot(localForward);
@@ -226,9 +231,7 @@ loop(dt) {
         const wheelSuspensionLength = this.controller.wheelSuspensionLength(i) || 0;
         const wheelChassisConnectionPointCs = this.controller.wheelChassisConnectionPointCs(i);
         const wheelSteering = this.controller.wheelSteering(i) || 0;
-        // const wheelRotation = this.controller.wheelRotation(i) || 0;
         let wheelRotation;
-        // const wheelAxleCs = this.controller.wheelAxleCs(i);
 
         // Position
         const wheelPosition = new THREE.Vector3(wheelChassisConnectionPointCs.x, wheelChassisConnectionPointCs.y, wheelChassisConnectionPointCs.z);
@@ -310,6 +313,7 @@ loop(dt) {
         }
     })
   }
+
   getBoundingBox(item){
     const bb = new THREE.Box3().setFromObject(item)
     const minPoint = bb.min;

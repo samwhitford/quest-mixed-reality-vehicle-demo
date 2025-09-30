@@ -21,11 +21,11 @@ export default class World {
     const unsub = appStateStore.subscribe((state) => {
       if (state.physicsReady && state.assetsReady) {
         this.trafficCone = new TrafficCone();
-        this.grabbableObject.push(...this.trafficCone.meshArray)
+        this.grabbableObject.push(...this.trafficCone.meshArray);
         this.Ramp = new Ramp();
-        this.grabbableObject.push(...this.Ramp.meshArray)
+        this.grabbableObject.push(...this.Ramp.meshArray);
         this.vehicle = new Vehicle();
-        // this.grabbableObject.push(this.vehicle.chassisMesh)
+        this.grabbableObject.push(this.vehicle.chassisMesh);
         this.vehicleController = new VehicleController();
         this.environment = new Environment();
         unsub();

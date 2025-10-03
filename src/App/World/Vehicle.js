@@ -85,6 +85,7 @@ export default class Vehicle {
       visible: false,
     });
     this.chassisMesh = new THREE.Mesh(chassisGeom, chassisMat);
+    this.chassisMesh.name = 'vehicle';
 
     this.chassisMesh.rotation.y = Math.PI;
     this.chassisMesh.castShadow = true;

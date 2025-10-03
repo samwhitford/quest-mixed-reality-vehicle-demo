@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import assetStore from "../Utils/AssetStore.js";
-import { inputStore } from "../Utils/Store.js";
-
 import App from "../App.js";
+
+import { inputStore } from "../Utils/Store.js";
+import { ConfettiCannon } from "./confettiCannon.js";
 
 export default class Ramp {
   constructor(options = {}) {
@@ -11,7 +12,6 @@ export default class Ramp {
     this.assetStore = assetStore.getState();
     this.ramp = this.assetStore.loadedAssets.ramp;
     this.mesh = this.ramp.scene;
-    console.log(this.mesh)
     this.world = this.app.world
     this.physics = this.app.world.physics;
     this.meshArray = []
@@ -29,7 +29,7 @@ export default class Ramp {
         Math.PI                      // 180 degrees
       )
     };
-
+    this.rampGroup = new THREE.Group();
     this.scale = new THREE.Vector3().setScalar(this.config.scaleFactor)
     this.mesh.scale.copy(this.scale)
     this.mesh.updateMatrixWorld(true);
@@ -37,9 +37,10 @@ export default class Ramp {
       child.castShadow = true;
     })
     let meshClone = this.mesh.clone();
+    console.log(meshClone)
     meshClone.position.copy(this.config.position);
     meshClone.applyQuaternion(this.config.rotation);
-    this.scene.add(meshClone);
+    this.rampGroup.add(meshClone);
     for (const child of meshClone.children) {
       child.traverse((obj) => {
         if (obj.isMesh) {
@@ -55,5 +56,20 @@ export default class Ramp {
         }
       });
     }
+    this.confetti = new ConfettiCannon({
+      particleCount: 500,
+      cylinderRadius: 0.05,
+      cylinderHeight: 0.2,
+      initialSpeed: 15,
+      spreadAngle: 30, // Vertical spread
+      gravity: -20,
+      drag: 0.5,
+      duration: 0.25,
+      parentMesh: meshClone,
+    });
+    this.confetti.scale.setScalar(0.25);
+    this.rampGroup.add(this.confetti);
+    this.scene.add(this.rampGroup);
+
   }
 }

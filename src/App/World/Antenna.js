@@ -23,14 +23,14 @@ export class AntennaRig {
     this.returnToCenterX = options.returnToCenterX ?? 30.0;
     this.returnToCenterY = options.returnToCenterY ?? 30.0;
 
-    // --- 1. Geometry: cylinder subdivided along height ---
+    // --- Geometry: cylinder subdivided along height ---
     const geo = new THREE.CylinderGeometry(
       this.topradius, this.topradius, this.length,
       8, this.boneCount, false
     );
     geo.translate(0, this.length / 2, 0); // base at y=0
 
-    // --- 2. Bones ---
+    // --- Bones ---
     this.bones = [];
     const rootBone = new THREE.Bone();
     rootBone.position.y = 0;
@@ -47,37 +47,29 @@ export class AntennaRig {
       prevBone = bone;
     }
 
-    // --- 2a. add ball to end of antenna ---
-
-        // Get the very last bone, which represents the tip of the antenna
+    // --- add ball to end of antenna ---
+    // Get the very last bone, which represents the tip of the antenna
     const tipBone = this.bones[this.bones.length - 1];
 
-    // 1. Define the size and create the sphere geometry
+    // Define the size and create the sphere geometry
     const sphereRadius = this.topradius * 2.5; // Make the sphere a bit larger than the antenna tip
     const sphereGeo = new THREE.SphereGeometry(sphereRadius, 16, 16);
 
-    // 2. Create a material for the sphere
+    // Create a material for the sphere
     const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff2800 }); // e.g., bright red
 
-    // 3. Create the mesh
+    // Create the mesh
     this.sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-
-    // Position the sphere: it needs to be offset by its own radius
-    // since the tipBone's position is the *start* of the last segment's space.
-    // The previous bone (prevBone) had `segmentHeight` added to its Y position,
-    // so `tipBone` is effectively at the top of the antenna.
-    // Set the sphere to be at y=0 relative to the tipBone's position,
-    // which is the end of the last bone segment.
     this.sphereMesh.position.set(0, 0, 0);
 
-    // 4. Attach the sphere mesh to the tip bone
+    // Attach the sphere mesh to the tip bone
     tipBone.add(this.sphereMesh);
 
     // ---
 
     const skeleton = new THREE.Skeleton(this.bones);
 
-    // --- 3. Skin indices & weights ---
+    // --- Skin indices & weights ---
     const skinIndices = [];
     const skinWeights = [];
     const posAttr = geo.attributes.position;
@@ -161,12 +153,8 @@ export class AntennaRig {
       if (i === 0) return; // root stays fixed
 
       const lagFactor = 0.005 + i / this.bones.length;
-      // console.log(lagFactor);
-      // const currentRot = new THREE.Vector2(bone.rotation.x, bone.rotation.z);
 
-      // currentRot.lerp(prevRot, this.followSpeed * dt * lagFactor);
       const lerpFactor = 1.0 - Math.exp(-this.followSpeed * dt * lagFactor);
-      // currentRot.lerp(prevRot, lerpFactor);
 
       const nextRot = prevRot.clone().lerp(
         new THREE.Vector2(bone.rotation.x, bone.rotation.z),

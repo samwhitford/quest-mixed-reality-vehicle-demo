@@ -1,7 +1,7 @@
 {
   "name":"Mixed Reality RC Truck Experience",
   "short_name":"MRRCExperience",
-  "start_url":".",
+  "start_url":"https://www.whitfordworkshop.com/TruckMR2/index.html",
   "background_color":"#000",
   "theme_color":"#000",
   "display":"standalone",

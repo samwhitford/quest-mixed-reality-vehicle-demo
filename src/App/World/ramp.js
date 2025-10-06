@@ -41,6 +41,16 @@ export default class Ramp {
     meshClone.position.copy(this.config.position);
     meshClone.applyQuaternion(this.config.rotation);
     this.rampGroup.add(meshClone);
+    this.confetti = new ConfettiCannon({
+      particleCount: 500,
+      cylinderRadius: 0.05,
+      cylinderHeight: 0.2,
+      initialSpeed: 15,
+      spreadAngle: 30, // Vertical spread
+      gravity: -20,
+      drag: 0.5,
+      duration: 0.25,
+    });
     for (const child of meshClone.children) {
       child.traverse((obj) => {
         if (obj.isMesh) {
@@ -53,20 +63,10 @@ export default class Ramp {
           obj.userData.originalPos.setX(-0.05);
           obj.userData.originalRot = this.config.rotation;
           obj.material.side = THREE.FrontSide;
+          this.confetti.options.parentMesh = this.physics.meshMap.get(obj);
         }
       });
     }
-    this.confetti = new ConfettiCannon({
-      particleCount: 500,
-      cylinderRadius: 0.05,
-      cylinderHeight: 0.2,
-      initialSpeed: 15,
-      spreadAngle: 30, // Vertical spread
-      gravity: -20,
-      drag: 0.5,
-      duration: 0.25,
-      parentMesh: meshClone,
-    });
     this.confetti.scale.setScalar(0.25);
     this.rampGroup.add(this.confetti);
     this.scene.add(this.rampGroup);

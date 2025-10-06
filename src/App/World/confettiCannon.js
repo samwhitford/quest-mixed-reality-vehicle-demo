@@ -348,42 +348,35 @@ export class ConfettiCannon extends THREE.Object3D {
 
       meshPhysicsSync() {
         if (this.options.parentMesh) {
-            let body = this.options.parentMesh.children[0]; // Assuming this is the mesh whose transform you want to track
+            let body = this.options.parentMesh; // Assuming this is the mesh whose transform you want to track
 
-            // Temporary storage vectors for world transforms
-            const position = new THREE.Vector3();
-            const quaternion = new THREE.Quaternion();
+            // Get the target mesh's World Position and Rotation
+            const position = new THREE.Vector3().copy(body.translation());
+            const quaternion = new THREE.Quaternion().copy(body.rotation());
 
-            // 1. Get the target mesh's World Position and Rotation
-            body.getWorldPosition(position);
-            body.getWorldQuaternion(quaternion);
-
-            // 2. Apply the offset (crucial fix)
-            // a. Create a temporary vector for the offset
+            // Apply the offset (crucial fix)
+            // Create a temporary vector for the offset
             const rotatedOffset = this.options.offsetFromParent.clone();
 
-            // b. Rotate the offset vector by the body's world rotation before adding it
+            // Rotate the offset vector by the body's world rotation before adding it
             rotatedOffset.applyQuaternion(quaternion);
 
-            // c. Apply the rotation and position to the cannon
+            // Apply the rotation and position to the cannon
             this.position.copy(position.add(rotatedOffset)); // Apply rotated offset to the world position
             this.quaternion.copy(quaternion);                // Apply the rotation
 
-            // 3. Synchronize Raycaster (Corrections applied here)
+            // Synchronize Raycaster (Corrections applied here)
 
-            // a. The ray origin is the cannon's new world position
+            // The ray origin is the cannon's new world position
             this.options.rayOrigin = this.position;
 
-            // b. The ray direction must be a WORLD-SPACE VECTOR derived from the rotation (quaternion),
+            // The ray direction must be a WORLD-SPACE VECTOR derived from the rotation (quaternion),
             //    not the quaternion itself. We use the local UP vector (0, 1, 0) and rotate it.
             this.options.rayDirectionWorld.set(0, 1, 0);
             this.options.rayDirectionWorld.applyQuaternion(this.quaternion); // Transform local UP to world direction
 
-            // c. Set the raycaster
+            // Set the raycaster
             this.raycaster.set(this.options.rayOrigin, this.options.rayDirectionWorld);
-
-            // Note: You should also update your ArrowHelper in your main loop using these same values
-            // or add logic here to update the helper's direction and position.
         }
       }
 

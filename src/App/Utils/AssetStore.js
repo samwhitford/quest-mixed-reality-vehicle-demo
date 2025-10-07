@@ -21,6 +21,11 @@ const assetsToLoad = [
     path: "/models/ramp.glb",
     type: "model",
   },
+  {
+    id: "vrControls",
+    path: "/images/motion_controls.png",
+    type: "texture",
+  },
 ];
 
 // addLoad function is just adding assets to loadedAssets object once they are loaded

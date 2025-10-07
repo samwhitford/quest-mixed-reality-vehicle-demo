@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import App from "./App.js";
+import ThreeMeshUI from 'three-mesh-ui';
+import assetStore from "./Utils/AssetStore.js";
+
 import { RealityAccelerator } from 'ratk';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
@@ -8,6 +11,8 @@ import { appStateStore, inputStore } from "./Utils/Store.js";
 
 export default class RATK {
   constructor() {
+    this.app = new App();
+    this.scene = this.app.scene;
     this.debugCoolDown = false;
     this.roomScanMesh = null;
     this.controllers = {
@@ -23,9 +28,10 @@ export default class RATK {
         this.instance = this.app.renderer.instance;
         this.ratk = new RealityAccelerator(this.instance.xr);
         this.grabbableObjects = this.world.grabbableObject;
+        this.assetStore = assetStore.getState();
+        this.vrControls = this.assetStore.loadedAssets.vrControls;
         this.setupRATK()
         this.addControllers()
-        console.log(this.ratk)
         unsub();
       }
     });
@@ -45,6 +51,25 @@ export default class RATK {
     this.debugCoolDown = false;
     this.shadowGroup = new THREE.Group();
     this.occlusionGroup = new THREE.Group();
+  }
+
+  makeTextPanel(connectionPoint) {
+    const container = new ThreeMeshUI.Block({
+      height: 0.15,
+      width: 0.25,
+      margin: 0.025,
+      padding: 0.025,
+    });
+
+    container.position.set(-0.1 , -0.1, 0);
+    container.rotation.x = Math.PI;
+    container.rotation.z = Math.PI * 0.25;
+    container.rotation.y = - Math.PI * 0.25;
+    connectionPoint.add(container);
+    container.set({
+      backgroundTexture: this.vrControls,
+      backgroundSize: "stretch",
+    });
   }
 
   setupRATK() {
@@ -151,6 +176,9 @@ export default class RATK {
       const mesh = controllerModelFactory.createControllerModel(gripSpace);
       gripSpace.add(mesh);
       gripSpace.add(controllerSphere);
+      if (i === 0){
+        this.makeTextPanel(gripSpace);
+      }
       gripSpace.userData.collisionSphere = controllerSphere;
       gripSpace.userData.physicsBody = controllerBody;
       this.scene.add(raySpace, gripSpace);
@@ -183,6 +211,7 @@ export default class RATK {
       this.ratk.update(frame, refspace);
     }
     this.handleControllers();
+    ThreeMeshUI.update();
   }
 
   handleControllers() {

@@ -44,6 +44,8 @@ export default class RATK {
       this.left = state.left;
       this.leftSqueeze = state.leftSqueeze;
       this.rightSqueeze = state.rightSqueeze;
+      this.leftTrigger = state.leftTrigger;
+      this.rightTrigger = state.rightTrigger;
     });
     appStateStore.subscribe((state) => {
       this.xrActive = state.xrActive;
@@ -118,6 +120,10 @@ export default class RATK {
       console.log("XR_SESSION_END")
       this.app.world.environment.gridHelper.visible = true;
       appStateStore.setState({ xrActive: false });
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 3000);
+      return;
     });
     const environment = new RoomEnvironment(this.instance);
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);
@@ -221,6 +227,12 @@ export default class RATK {
         gripSpace.userData.physicsBody.setTranslation(tempPos, true);
         gripSpace.userData.physicsBody.setRotation(tempQuat, true);
       }
+      if(gamepad.getButtonClick(XR_BUTTONS.TRIGGER)){ // Trigger
+        inputStore.setState({ rightTrigger: true });
+      }
+      if(gamepad.getButtonUp(XR_BUTTONS.TRIGGER)){
+        inputStore.setState({ rightTrigger: false });
+      }
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
         inputStore.setState({ reset: true });
       }
@@ -261,14 +273,22 @@ export default class RATK {
         gripSpace.userData.physicsBody.setTranslation(tempPos, true);
         gripSpace.userData.physicsBody.setRotation(tempQuat, true);
       }
-      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // A button
+      if(gamepad.getButtonClick(XR_BUTTONS.TRIGGER)){ // Trigger
+        inputStore.setState({ leftTrigger: true });
+      }
+      if(gamepad.getButtonUp(XR_BUTTONS.TRIGGER)){
+        inputStore.setState({ leftTrigger: false });
+      }
+      if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_1)){ // X button
         inputStore.setState({ debug: true });
       }
       if(gamepad.getButtonUp(XR_BUTTONS.BUTTON_1)){
         inputStore.setState({ debug: false });
       }
       if(gamepad.getButtonClick(XR_BUTTONS.BUTTON_2)){ // Y button
-        console.log('clicked Y')
+        if(this.leftTrigger){
+          this.sessionEnd(this.instance.xr.getSession());
+        }
       }
       const thumbstickValueY = gamepad.getAxis(
         AXES.XR_STANDARD.THUMBSTICK_Y,
@@ -298,6 +318,10 @@ export default class RATK {
         this.debugCoolDown = false;
       }, 300);
     }
+  }
+
+  async sessionEnd (session){
+    await session.end();
   }
 
   onSqueezeStart = (event) => {

@@ -25,4 +25,6 @@ export const inputStore = createStore(() => ({
   debug: false,
   leftSqueeze: false,
   rightSqueeze: false,
+  leftTrigger: false,
+  rightTrigger: false,
 }));

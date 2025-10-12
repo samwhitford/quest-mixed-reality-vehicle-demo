@@ -168,21 +168,6 @@ export default class Vehicle {
     });
   }
 
-loop(dt) {
-    if(this.debug && ! this.debugCoolDown){
-      this.debugCoolDown  = true;
-      this.chassisMesh.material.visible = ! this.chassisMesh.material.visible;
-      this.wheelMeshes.forEach((mesh) => {
-        mesh.material.visible = ! mesh.material.visible;
-      });
-      setTimeout(() => {
-        this.debugCoolDown = false;
-      }, 300);
-    }
-    this.syncPhysicsAndMesh(dt);
-    this.antennaUpdate(dt);
-  }
-
   antennaUpdate(dt){
       const vel = this.chassisBody.linvel();
       const carVel = new THREE.Vector3(vel.x, vel.y, vel.z);
@@ -330,4 +315,20 @@ loop(dt) {
     boundingBox.getCenter(center);
     item.scene.position.sub(center);
   }
+
+  loop(dt) {
+    if(this.debug && ! this.debugCoolDown){
+      this.debugCoolDown  = true;
+      this.chassisMesh.material.visible = ! this.chassisMesh.material.visible;
+      this.wheelMeshes.forEach((mesh) => {
+        mesh.material.visible = ! mesh.material.visible;
+      });
+      setTimeout(() => {
+        this.debugCoolDown = false;
+      }, 300);
+    }
+    this.syncPhysicsAndMesh(dt);
+    this.antennaUpdate(dt);
+  }
+
 }

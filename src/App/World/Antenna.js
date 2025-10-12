@@ -106,7 +106,7 @@ export class AntennaRig {
 
     this.object3d = this.mesh;
 
-    // --- 5. Sway state ---
+    // --- Sway state ---
     this.baseRot = new THREE.Vector2();
     this.baseVel = new THREE.Vector2();
   }

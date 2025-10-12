@@ -205,15 +205,6 @@ export default class RATK {
     }
   }
 
-  loop(frame) {
-    let refspace = this.instance.xr.getReferenceSpace;
-    if (frame && refspace){
-      this.ratk.update(frame, refspace);
-    }
-    this.handleControllers();
-    ThreeMeshUI.update();
-  }
-
   handleControllers() {
     Object.values(this.controllers).forEach((controller) => {
       if (controller?.gamepad) {
@@ -351,4 +342,14 @@ export default class RATK {
 
     controller.userData.grabbed = null;
   }
+
+  loop(frame) {
+    let refspace = this.instance.xr.getReferenceSpace;
+    if (frame && refspace){
+      this.ratk.update(frame, refspace);
+    }
+    this.handleControllers();
+    ThreeMeshUI.update();
+  }
+
 }

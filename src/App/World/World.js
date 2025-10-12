@@ -33,7 +33,6 @@ export default class World {
     this.loop();
   }
 
-
   loop(deltaTime) {
     this.physics.loop(deltaTime);
     if (this.environment) this.environment.loop();

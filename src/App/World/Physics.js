@@ -2,8 +2,6 @@ import * as THREE from "three";
 import App from "../App.js";
 import { appStateStore, inputStore } from "../Utils/Store.js";
 import { RapierHelper } from 'three/addons/helpers/RapierHelper.js';
-import { element } from "three/tsl";
-
 
 export default class Physics {
   constructor() {
@@ -32,7 +30,7 @@ export default class Physics {
       this.rapier = RAPIER;
 
       this.world.maxVelocityIterations = 8;
-      this.world.maxPositionIterations = 8;
+      this.world.maxPositionIterations = 10;
 
       this.rapierLoaded = true;
       appStateStore.setState({ physicsReady: true });
@@ -160,29 +158,6 @@ computeConvexHullDimensions(item) {
     });
 
     return { scaledVertices, indices };
-  }
-
-  loop(deltaTime) {
-    // Update the ThreeJS Mesh According to Physics World Object
-    if (!this.rapierLoaded) return;
-
-    this.world.timestep = deltaTime;
-    this.world.step();
-
-    if ( this.physicsHelper && ! this.xrActive ) {
-      this.physicsHelper.update();
-    }
-
-    if (this.xrActive) this.physicsHelper.visible = false;
-
-    if(this.debug && ! this.debugCoolDown && ! this.xrActive){
-      this.debugCoolDown  = true;
-      this.physicsHelper.visible = ! this.physicsHelper.visible;
-      setTimeout(() => {
-        this.debugCoolDown = false;
-      }, 300);
-    }
-    this.meshPhysicsSync();
   }
 
   meshPhysicsSync(){
@@ -341,6 +316,29 @@ computeConvexHullDimensions(item) {
     this.previousPosition.set(0, 0, 0);
     this.linearVelocity.set(0, 0, 0);
     this.angularVelocity.set(0, 0, 0);
+  }
+
+    loop(deltaTime) {
+    // Update the ThreeJS Mesh According to Physics World Object
+    if (!this.rapierLoaded) return;
+
+    this.world.timestep = deltaTime;
+    this.world.step();
+
+    if ( this.physicsHelper && ! this.xrActive ) {
+      this.physicsHelper.update();
+    }
+
+    if (this.xrActive) this.physicsHelper.visible = false;
+
+    if(this.debug && ! this.debugCoolDown && ! this.xrActive){
+      this.debugCoolDown  = true;
+      this.physicsHelper.visible = ! this.physicsHelper.visible;
+      setTimeout(() => {
+        this.debugCoolDown = false;
+      }, 300);
+    }
+    this.meshPhysicsSync();
   }
 
 }

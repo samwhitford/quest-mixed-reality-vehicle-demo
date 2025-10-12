@@ -21,9 +21,6 @@ export default class App {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( 0x444444 );
 
-    // add debug GUI
-    // this.gui = new GUI();
-
     // Asset Loader
     this.assetLoader = new AssetLoader();
 

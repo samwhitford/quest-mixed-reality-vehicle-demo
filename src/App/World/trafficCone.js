@@ -38,11 +38,11 @@ export default class TrafficCone {
       let check = i + 1;
       if (check % 2 !== 0) {
         this.position.setX(-0.5);
-        this.position.setY(2);
+        this.position.setY(1);
         this.position.setZ(-0.5 * (check + 0.25));
       } else {
         this.position.setX(0.5);
-        this.position.setY(2);
+        this.position.setY(1);
         this.position.setZ(-0.5 * ((check - 1 ) + 0.25));
       }
       let meshClone = this.mesh.clone();

@@ -40,7 +40,7 @@ export default class Vehicle {
       maxSuspensionTravel: 0.5,
       suspensionDamping: 20.0,
       chassisMass: options.chassisMass || 8,
-      position: options.position || [0, 2, -1], // spawn point
+      position: options.position || [0, 1, -1], // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0), // Y-axis
         Math.PI                      // 180 degrees

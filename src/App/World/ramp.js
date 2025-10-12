@@ -23,7 +23,7 @@ export default class Ramp {
     this.config = {
       scaleFactor: 0.2,
       quantity: 1,
-      position: new THREE.Vector3(-0.2, 2, -3), // spawn point
+      position: new THREE.Vector3(-0.2, 1, -3), // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0), // Y-axis
         Math.PI                      // 180 degrees

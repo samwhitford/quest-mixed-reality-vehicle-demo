@@ -118,12 +118,9 @@ export default class RATK {
     });
     this.instance.xr.addEventListener('sessionend', () => {
       console.log("XR_SESSION_END")
+      this.app.camera.reset();
       this.app.world.environment.gridHelper.visible = true;
       appStateStore.setState({ xrActive: false });
-      setTimeout(() => {
-        window.location.reload(true);
-      }, 3000);
-      return;
     });
     const environment = new RoomEnvironment(this.instance);
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);

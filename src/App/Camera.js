@@ -5,13 +5,21 @@ import { sizesStore } from "./Utils/Store.js";
 import App from "./App.js";
 
 export default class Camera {
-  constructor() {
+  constructor(options = {}) {
     this.app = new App();
     this.canvas = this.app.canvas;
 
+    
     this.sizesStore = sizesStore;
-
     this.sizes = this.sizesStore.getState();
+
+    this.options = {
+      fov: 50,
+      aspect: this.sizes.width / this.sizes.height,
+      near: 0.1,
+      far: 1000,
+      position: new THREE.Vector3(1,1,2)
+    }
 
     this.setInstance();
     this.setControls();
@@ -21,14 +29,12 @@ export default class Camera {
 
   setInstance() {
     this.instance = new THREE.PerspectiveCamera(
-      50,
-      this.sizes.width / this.sizes.height,
-      0.1,
-      1000
+      this.options.fov,
+      this.options.aspect,
+      this.options.near,
+      this.options.far
     );
-    this.instance.position.z = 2;
-    this.instance.position.y = 1;
-    this.instance.position.x = 1;
+    this.instance.position.copy(this.options.position);
   }
 
   setControls() {
@@ -48,6 +54,15 @@ export default class Camera {
       this.instance.aspect = sizes.width / sizes.height;
       this.instance.updateProjectionMatrix();
     });
+  }
+
+  reset(){
+    this.instance.fov = this.options.fov;
+    this.instance.aspect = this.options.aspect;
+    this.instance.near = this.options.near;
+    this.instance.far = this.options.far;
+    this.instance.position.copy(this.options.position);
+    this.instance.updateProjectionMatrix();
   }
 
   loop() {

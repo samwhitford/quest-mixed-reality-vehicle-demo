@@ -9,19 +9,19 @@ export class AntennaRig {
    *   stiffness, damping, maxAngle, followSpeed: sway tuning
    */
   constructor(options = {}) {
-    this.boneCount   = options.boneCount   ?? 3;
-    this.length      = options.length      ?? 1.0;
-    this.topradius   = options.topradius   ?? 0.02;
-    this.radius      = options.radius      ?? 0.02;
+    this.boneCount   = options.boneCount   || 3;
+    this.length      = options.length      || 1.0;
+    this.topradius   = options.topradius   || 0.02;
+    this.radius      = options.radius      || 0.02;
 
-    this.stiffness   = options.stiffness   ?? 2.0;
-    this.damping     = options.damping     ?? 0.05;
-    this.maxAngle    = options.maxAngle    ?? 0.5;   // radians (~28°)
-    this.followSpeed = options.followSpeed ?? 250.0;
-    this.swayMultiplier = options.swayMultiplier ?? 200.0;
+    this.stiffness   = options.stiffness   || 2.0;
+    this.damping     = options.damping     || 0.05;
+    this.maxAngle    = options.maxAngle    || 0.5;   // radians (~28°)
+    this.followSpeed = options.followSpeed || 250.0;
+    this.swayMultiplier = options.swayMultiplier || 200.0;
     // Add these lines to the constructor
-    this.returnToCenterX = options.returnToCenterX ?? 30.0;
-    this.returnToCenterY = options.returnToCenterY ?? 30.0;
+    this.returnToCenterX = options.returnToCenterX || 30.0;
+    this.returnToCenterY = options.returnToCenterY || 30.0;
 
     // --- Geometry: cylinder subdivided along height ---
     const geo = new THREE.CylinderGeometry(
@@ -95,7 +95,7 @@ export class AntennaRig {
     geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndices, 4));
     geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeights, 4));
 
-    // --- 4. Material & Mesh ---
+    // --- Material & Mesh ---
     const mat = new THREE.MeshStandardMaterial({ color: 0x333333 });
     mat.skinning = true; // IMPORTANT
     mat.side = THREE.DoubleSide;

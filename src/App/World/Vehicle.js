@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import assetStore from "../Utils/AssetStore.js";
 import { inputStore } from "../Utils/Store.js";
-import { AntennaRig } from "./Antenna.js";
+import { AntennaRig } from "./antenna.js";
 
 import App from "../App.js";
 

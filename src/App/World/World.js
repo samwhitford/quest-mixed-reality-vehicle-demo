@@ -5,8 +5,8 @@ import Physics from "./Physics.js";
 import Environment from "./Environment.js";
 import Vehicle from "./Vehicle.js";
 import VehicleController from "./VehicleController.js";
-import TrafficCone from "./trafficCone.js";
-import Ramp from "./ramp.js";
+import TrafficCone from "./Cone.js";
+import Ramp from "./Ramp.js";
 
 import { appStateStore } from "../Utils/Store.js";
 
@@ -35,8 +35,6 @@ export default class World {
         unsub();
       }
     });
-
-    this.loop();
   }
 
   loop(deltaTime) {

@@ -20,35 +20,40 @@ export default class TrafficCone {
       this.debug = state.debug;
     });
 
-    this.config = {
+    this.options = {
       scaleFactor: 0.1,
       quantity: 6,
       position: new THREE.Vector3(), // spawn point
-      rotation: new THREE.Quaternion()
+      rotation: new THREE.Quaternion(),
+      ...options
     };
-    this.scale = new THREE.Vector3().setScalar(this.config.scaleFactor)
+    this.scale = new THREE.Vector3().setScalar(this.options.scaleFactor)
     this.mesh.scale.copy(this.scale)
     this.mesh.updateMatrixWorld(true);
     this.mesh.traverse(function(child){
       child.castShadow = true;
     })
 
-    for (let i = 0; i < this.config.quantity; i++) {
+    for (let i = 0; i < this.options.quantity; i++) {
       this.position = new THREE.Vector3();
       let check = i + 1;
       if (check % 2 !== 0) {
-        this.position.setX(-0.5);
-        this.position.setY(1);
-        this.position.setZ(-0.5 * (check + 0.25));
+        this.position.set(
+          -4,
+          2,
+          -4 * (check + 0.5)
+        ).multiplyScalar(this.options.scaleFactor)
       } else {
-        this.position.setX(0.5);
-        this.position.setY(1);
-        this.position.setZ(-0.5 * ((check - 1 ) + 0.25));
+        this.position.set(
+          4,
+          2,
+          -4 * ((check - 1 ) + 0.5)
+        ).multiplyScalar(this.options.scaleFactor)
       }
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);
       meshClone.userData.originalPos = this.position;
-      meshClone.userData.originalRot = this.config.rotation;
+      meshClone.userData.originalRot = this.options.rotation;
       this.scene.add(meshClone);
       this.physics.add(meshClone, "dynamic", "convexHull");
       this.physics.meshMap.get(meshClone).setSoftCcdPrediction(1);

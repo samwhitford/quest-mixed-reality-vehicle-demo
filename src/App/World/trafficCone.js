@@ -42,13 +42,13 @@ export default class TrafficCone {
           -4,
           2,
           -4 * (check + 0.5)
-        ).multiplyScalar(this.options.scaleFactor)
+        ).multiplyScalar(this.options.scaleFactor).add(this.options.position)
       } else {
         this.position.set(
           4,
           2,
           -4 * ((check - 1 ) + 0.5)
-        ).multiplyScalar(this.options.scaleFactor)
+        ).multiplyScalar(this.options.scaleFactor).add(this.options.position)
       }
       let meshClone = this.mesh.clone();
       meshClone.position.copy(this.position);

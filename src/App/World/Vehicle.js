@@ -23,29 +23,32 @@ export default class Vehicle {
     this.applyMaterial(this.chassis);
     this.applyMaterial(this.wheel);
 
-    this.chassis.scene.scale.set(0.25,0.25,0.25)
-    this.wheel.scene.scale.set(0.27,0.27,0.27)
-
-    this.centerGeometry(this.chassis);
-    this.chassisBoundingBox = this.getBoundingBox(this.chassis.scene);
-
+    
+    
     this.world = this.app.world
     this.physics = this.app.world.physics;
-
+    
     // Config defaults
     this.config = {
-      wheelRestLength: options.wheelRestLength || 0.101,
-      suspensionStiffness: options.suspensionStiffness || 100.0,
-      frictionSlip: options.frictionSlip || 15.0,
-      maxSuspensionTravel: 0.5,
-      suspensionDamping: 20.0,
-      chassisMass: options.chassisMass || 8,
+      scaleFactor: 0.125, // Set the default scale factor here
       position: options.position || [0, 1, -1], // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0), // Y-axis
         Math.PI                      // 180 degrees
-      )
+      ),
+      wheelRestLength: 0.03,
+      suspensionStiffness: 110,
+      frictionSlip: 15,
+      maxSuspensionTravel: 0.4,
+      suspensionDamping: 20,
+      chassisMass: 9,
     };
+
+    this.chassis.scene.scale.setScalar(this.config.scaleFactor)
+    this.wheel.scene.scale.setScalar(this.config.scaleFactor + 0.002)
+    
+    this.centerGeometry(this.chassis);
+    this.chassisBoundingBox = this.getBoundingBox(this.chassis.scene);
 
     // --- Chassis physics body ---
     // Create a Three.js Quaternion
@@ -93,18 +96,22 @@ export default class Vehicle {
 
     this.chassisMesh.add(this.chassis.scene);
     this.chassisMesh.children[0].position.y += 0.02;
-    this.chassisMesh.children[0].position.z -= 0.02;
+    this.chassisMesh.children[0].position.z -= 0.015;
 
     this.antenna = new AntennaRig({
       boneCount: 5,
-      length: 0.25,
+      length: 0.2,
       topradius: 0.004,
       radius: 0.006,
       stiffness: 1.0,
       damping: 0.1
     });
-    this.antenna.object3d.position.set(-0.06, 0, 0.2);
-    this.chassisMesh.add(this.antenna.object3d);
+    // this.antenna.object3d.position.set(-0.06, 0, 0.2);
+    this.antennaGroup = new THREE.Group();
+    this.antennaGroup.add(this.antenna.object3d);
+    this.antennaGroup.position.set(-0.25, 0.45, 0.85)
+    this.antennaGroup.scale.setScalar(3)
+    this.chassis.scene.add(this.antennaGroup);
 
     // --- Vehicle Controller ---
     this.controller = this.world.physics.world.createVehicleController(
@@ -118,9 +125,9 @@ export default class Vehicle {
 
   addWheels(scene) {
     const restLength = this.config.wheelRestLength;
-    let posx = 0.13;
-    let posy = 0.05;
-    let posz = 0.15;
+    let posx = 0.45 * this.config.scaleFactor;
+    let posy = 0.25 * this.config.scaleFactor;
+    let posz = 0.545 * this.config.scaleFactor;
     const positions = [
       [ posx, - posy,  posz], // front-left
       [- posx, - posy,  posz], // front-right

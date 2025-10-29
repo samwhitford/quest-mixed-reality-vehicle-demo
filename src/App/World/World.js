@@ -1,4 +1,4 @@
-// import * as THREE from "three";
+import * as THREE from "three";
 
 import App from "../App.js";
 import Physics from "./Physics.js";
@@ -18,9 +18,15 @@ export default class World {
 
     const unsub = appStateStore.subscribe((state) => {
       if (state.physicsReady && state.assetsReady) {
-        this.trafficCone = new TrafficCone();
+        this.trafficCone = new TrafficCone({
+          scaleFactor: 0.06,
+          position: new THREE.Vector3(0, 1, -0.5)
+        });
         this.grabbableObject.push(...this.trafficCone.meshArray);
-        this.Ramp = new Ramp();
+        this.Ramp = new Ramp({
+          scaleFactor: 0.12,
+          position: new THREE.Vector3(0, 1, -2.2)
+        });
         this.grabbableObject.push(...this.Ramp.meshArray);
         this.vehicle = new Vehicle();
         this.grabbableObject.push(this.vehicle.chassisMesh);

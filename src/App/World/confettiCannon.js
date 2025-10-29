@@ -61,7 +61,7 @@ export class ConfettiCannon extends THREE.Object3D {
      * Creates the raycaster for the cannon/emitter.
      */
     initRaycaster() {
-      this.raycaster = new THREE.Raycaster(this.options.rayOrigin, this.options.rayDirectionWorld, 0, 2);
+      this.raycaster = new THREE.Raycaster(this.options.rayOrigin, this.options.rayDirectionWorld, 0, 0.1);
     }
 
     /**

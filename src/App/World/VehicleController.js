@@ -19,20 +19,20 @@ export default class VehicleController {
     });
 
     this.config = {
-      maxEngineForce: options.maxEngineForce || 10,
-      maxBrakeForce: options.maxBrakeForce || 10,
+      maxEngineForce: options.maxEngineForce || 8,
+      maxBrakeForce: options.maxBrakeForce || 8,
       maxSteering: options.maxSteering || 0.4,
       forward: 0,
       right: 0,
       brake: 0,
-      accelerateForce: { value: 0, min: -10, max: 10, step: 0.25 },
-      brakeForce: { value: 0.05, min: 0, max: 1, step: 0.002 },
+      accelerateForce: { value: 0, min: -8, max: 8, step: 0.2 },
+      brakeForce: { value: 0.05, min: 0, max: 1, step: 0.004 },
       steerAngle: { value: Math.PI / 24, min: 0, max: Math.PI / 12 },
     };
 
   }
 
-  loop(dt) {
+  loop() {
     this.engine = 0;
     this.steering = 0;
     this.brake = 0;

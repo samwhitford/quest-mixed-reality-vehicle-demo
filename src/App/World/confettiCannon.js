@@ -24,7 +24,7 @@ export class ConfettiCannon extends THREE.Object3D {
 
         this.options = {
             parentMesh: null,
-            offsetFromParent: new THREE.Vector3(0,0.16,0.75),
+            offsetFromParent: new THREE.Vector3(0,0.16,0.25),
             rayOrigin: new THREE.Vector3(),
             rayDirectionWorld: new THREE.Vector3(0, 1, 0),
             particleCount: 1000,

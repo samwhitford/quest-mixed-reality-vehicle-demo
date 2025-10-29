@@ -57,7 +57,7 @@ export default class Ramp {
           obj.castShadow = true;
           obj.receiveShadow = true;
           this.meshArray.push(obj);
-          this.physics.add(obj, "dynamic", "trimesh");
+          this.physics.add(obj, "dynamic", "convexHull");
           this.physics.meshMap.get(obj).setSoftCcdPrediction(2);
           obj.userData.originalPos = this.config.position;
           obj.userData.originalPos.setX(-0.05);

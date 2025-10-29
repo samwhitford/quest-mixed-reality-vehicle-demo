@@ -12,7 +12,27 @@ export default class Loop {
 
     this.clock = new THREE.Clock();
     this.previousElapsedTime = 0;
-    this.loop();
+    this.start();
+
+    this.paused = false;
+     document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        this.paused = true;
+      } else {
+        setTimeout(() => {
+          this.paused = false;
+        }, 200);
+      }
+    });
+  }
+
+  start() {
+    this.clock.start();
+    this.renderer.instance.setAnimationLoop((time,frame) => this.loop(time,frame))
+  }
+
+  stop() {
+    this.clock.stop();
   }
 
   loop(time,frame) {
@@ -20,11 +40,11 @@ export default class Loop {
     const deltaTime = elapsedTime - this.previousElapsedTime;
     this.previousElapsedTime = elapsedTime;
 
-    this.world.loop(deltaTime, elapsedTime);
+    if (!this.paused) {
+      this.world.loop(deltaTime);
+    }
     this.camera.loop();
     this.renderer.loop();
     if(this.ratk.ratk) this.ratk.loop(frame);
-
-    this.renderer.instance.setAnimationLoop((time,frame) => this.loop(time,frame))
   }
 }

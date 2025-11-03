@@ -95,7 +95,6 @@ export default class Physics {
     const worldRotation = mesh.getWorldQuaternion(new THREE.Quaternion());
     this.rigidBody.setTranslation(worldPosition);
     this.rigidBody.setRotation(worldRotation);
-
     this.meshMap.set(mesh, this.rigidBody);
 
     return this.rigidBody;
@@ -212,29 +211,29 @@ computeConvexHullDimensions(item) {
     }
     if (isGrabbing) {
       console.log("grabbing")
-      // A. GRAB MODE (Holding the object)
-      // 1. Ensure body is Kinematic
+      // GRAB MODE (Holding the object)
+      // Ensure body is Kinematic
       if (body.bodyType() !== this.rapier.RigidBodyType.KinematicPositionBased) {
           body.setBodyType(this.rapier.RigidBodyType.KinematicPositionBased);
       }
-      // 2. Swap Synchronization (Mesh -> Body)
+      // Swap Synchronization (Mesh -> Body)
       this.updateGrabbedObjectPhysics(mesh, body);
-      // 3. Track velocity for throwing
+      // Track velocity for throwing
       this.trackControllerVelocity(controller);
     } else {
       console.log("releasing")
-      // B. RELEASE MODE (isGrabbing is false, but grabbedObject is still set for cleanup)
-      // 1. Ensure body is Dynamic
+      // RELEASE MODE (isGrabbing is false, but grabbedObject is still set for cleanup)
+      // Ensure body is Dynamic
       if (body.bodyType() !== this.rapier.RigidBodyType.Dynamic) {
         body.setEnabled(false);
         body.setBodyType(this.rapier.RigidBodyType.Dynamic);
         body.setEnabled(true);
       }
-      // 2. Apply Throw Impulse
+      // Apply Throw Impulse
       this.applyThrowImpulse(body);
-      // re-parent mesh
+      // Re-parent mesh
       this.scene.attach(mesh);
-      // 3. Cleanup State (The final step)
+      // Cleanup State (The final step)
       mesh.userData.isGrabbed = false;
     }
   }
@@ -275,19 +274,16 @@ computeConvexHullDimensions(item) {
     controller.getWorldPosition(currentPosition);
     controller.getWorldQuaternion(currentQuaternion);
 
-    // 1. Calculate Linear Velocity (Position Delta / Time Delta)
+    // Calculate Linear Velocity (Position Delta / Time Delta)
     if (!this.previousPosition.equals(new THREE.Vector3())) {
         this.linearVelocity.subVectors(currentPosition, this.previousPosition)
             .divideScalar(this.world.timestep);
     }
 
-    // 2. Simple Angular Velocity (Just track the current rotation)
-    // A more accurate method uses delta rotation, but this is a simple proxy for the release direction.
-    // For throwing, we often only need the linear velocity.
-    // We'll set the angular velocity to the final rotation difference here for simplicity.
+    // Simple Angular Velocity (Just track the current rotation)
     this.angularVelocity.set(currentQuaternion.x, currentQuaternion.y, currentQuaternion.z);
 
-    // 3. Store current position for the next frame
+    // Store current position for the next frame
     this.previousPosition.copy(currentPosition);
   }
 

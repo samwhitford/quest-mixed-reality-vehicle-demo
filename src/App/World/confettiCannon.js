@@ -17,7 +17,7 @@ export class ConfettiCannon extends THREE.Object3D {
      * @param {number} [options.drag=0.1] - A simple air resistance factor.
      */
     constructor(options = {}) {
-        super(); // Call Object3D constructor
+        super();
 
         this.app = new App();
         this.scene = this.app.scene;
@@ -82,7 +82,7 @@ export class ConfettiCannon extends THREE.Object3D {
 
         this.add(this.emitterMesh);
     }
-/**
+    /**
      * Creates the InstancedMesh for the confetti particles (FINAL FIX for color).
      */
     initConfettiParticles() {
@@ -343,7 +343,6 @@ export class ConfettiCannon extends THREE.Object3D {
         if (allInactive && !this.isFiring && this.fireTime > 0) {
             this.resetCannon();
         }
-
       }
 
       meshPhysicsSync() {
@@ -366,12 +365,11 @@ export class ConfettiCannon extends THREE.Object3D {
             this.quaternion.copy(quaternion);                // Apply the rotation
 
             // Synchronize Raycaster (Corrections applied here)
-
             // The ray origin is the cannon's new world position
             this.options.rayOrigin = this.position;
 
             // The ray direction must be a WORLD-SPACE VECTOR derived from the rotation (quaternion),
-            //    not the quaternion itself. We use the local UP vector (0, 1, 0) and rotate it.
+            // not the quaternion itself. We use the local UP vector (0, 1, 0) and rotate it.
             this.options.rayDirectionWorld.set(0, 1, 0);
             this.options.rayDirectionWorld.applyQuaternion(this.quaternion); // Transform local UP to world direction
 

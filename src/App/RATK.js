@@ -331,7 +331,7 @@ export default class RATK {
       inputStore.setState({ rightSqueeze: true });
     }
     const controllerSphere = controller.userData.collisionSphere;
-    // controllerSphere.material.visible = true;
+    // controllerSphere.material.visible = true; // Debug
     const controllerPosition = new THREE.Vector3();
     controllerSphere.getWorldPosition(controllerPosition);
 
@@ -358,9 +358,8 @@ export default class RATK {
     if (controller.userData.hand === "right"){
       inputStore.setState({ rightSqueeze: false });
     }
-    const controllerSphere = controller.userData.collisionSphere;
-    controllerSphere.material.visible = false;
-
+    // const controllerSphere = controller.userData.collisionSphere; // Debug
+    // controllerSphere.material.visible = false; // Debug
     controller.userData.grabbed = null;
   }
 

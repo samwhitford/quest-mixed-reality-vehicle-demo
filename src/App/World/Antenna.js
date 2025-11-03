@@ -19,7 +19,7 @@ export class AntennaRig {
     this.maxAngle    = options.maxAngle    || 0.5;   // radians (~28°)
     this.followSpeed = options.followSpeed || 250.0;
     this.swayMultiplier = options.swayMultiplier || 200.0;
-    // Add these lines to the constructor
+
     this.returnToCenterX = options.returnToCenterX || 30.0;
     this.returnToCenterY = options.returnToCenterY || 30.0;
 
@@ -65,10 +65,7 @@ export class AntennaRig {
     // Attach the sphere mesh to the tip bone
     tipBone.add(this.sphereMesh);
 
-    // ---
-
     const skeleton = new THREE.Skeleton(this.bones);
-
     // --- Skin indices & weights ---
     const skinIndices = [];
     const skinWeights = [];
@@ -97,7 +94,7 @@ export class AntennaRig {
 
     // --- Material & Mesh ---
     const mat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    mat.skinning = true; // IMPORTANT
+    mat.skinning = true;
     mat.side = THREE.DoubleSide;
 
     this.mesh = new THREE.SkinnedMesh(geo, mat);

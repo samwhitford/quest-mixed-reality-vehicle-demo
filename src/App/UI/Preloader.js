@@ -13,11 +13,9 @@ export default class Preloader {
     this.keyboard = document.querySelector(".keyboard");
 
     this.assetStore.subscribe((state) => {
-      // console.log("STATE", state.loadedAssets);
       this.numberOfLoadedAssets = Object.keys(state.loadedAssets).length;
       this.numberOfAssetsToLoad = state.assetsToLoad.length;
       this.progress = this.numberOfLoadedAssets / this.numberOfAssetsToLoad;
-      // console.log("progress", this.progress);
 
       document.getElementById("progressPercentage").innerHTML = Math.trunc(
         this.progress * 100
@@ -25,14 +23,14 @@ export default class Preloader {
 
       if (this.progress === 1) {
         appStateStore.setState({ assetsReady: true });
-        this.loading.classList.add("fade");
+        this.loading.classList.add("fadeOut");
         window.setTimeout(() => this.ready(), 1200);
       }
     });
   }
 
   ready() {
-    // remove the loading elelemnt from DOM
+    // Remove the loading element from DOM
     this.loading.remove();
 
     this.startButton.style.display = "inline";
@@ -45,12 +43,12 @@ export default class Preloader {
     this.startButton.addEventListener(
       "click",
       () => {
-        this.overlay.classList.add("fade");
+        this.overlay.classList.add("fadeOut");
         this.startButton.classList.add("fadeOut");
         this.controller.classList.add("fadeOut");
         this.keyboard.classList.add("fadeOut");
 
-        // remove the overlay  and startButton elelemnt from DOM
+        // Remove the overlay and startButton element from DOM
         window.setTimeout(() => {
           this.overlay.remove();
           this.startButton.remove();

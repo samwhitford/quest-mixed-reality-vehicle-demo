@@ -23,14 +23,14 @@ export default class Vehicle {
     this.applyMaterial(this.chassis);
     this.applyMaterial(this.wheel);
 
-    
-    
+
+
     this.world = this.app.world
     this.physics = this.app.world.physics;
-    
+
     // Config defaults
     this.config = {
-      scaleFactor: 0.125, // Set the default scale factor here
+      scaleFactor: 0.125,
       position: options.position || [0, 1, -1], // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0), // Y-axis
@@ -46,7 +46,7 @@ export default class Vehicle {
 
     this.chassis.scene.scale.setScalar(this.config.scaleFactor)
     this.wheel.scene.scale.setScalar(this.config.scaleFactor + 0.002)
-    
+
     this.centerGeometry(this.chassis);
     this.chassisBoundingBox = this.getBoundingBox(this.chassis.scene);
 
@@ -106,7 +106,6 @@ export default class Vehicle {
       stiffness: 1.0,
       damping: 0.1
     });
-    // this.antenna.object3d.position.set(-0.06, 0, 0.2);
     this.antennaGroup = new THREE.Group();
     this.antennaGroup.add(this.antenna.object3d);
     this.antennaGroup.position.set(-0.25, 0.45, 0.85)
@@ -161,15 +160,11 @@ export default class Vehicle {
         visible: false,
       });
       const wheelMesh = new THREE.Mesh(wheelGeom, wheelMat);
-
-      // const wheelPivot = new THREE.Object3D();
       const wheelModel = this.wheel.scene.clone();
       if (i === 0 || i === 2) {
         wheelModel.rotation.y = Math.PI;
       }
-      // wheelModel.rotation.z = Math.PI / 2;
       wheelMesh.add(wheelModel);
-
       scene.add(wheelMesh);
       this.wheelMeshes.push(wheelMesh);
     });
@@ -183,7 +178,7 @@ export default class Vehicle {
       const instantaneousAccel = carVel.clone().sub(this.prevVel).divideScalar(dt);
 
       // Use a simple smoothing filter for a more stable acceleration value
-      const alpha = 0.5; // A value between 0 and 1, adjust as needed
+      const alpha = 0.5; // A value between 0 and 1
       this.smoothedAccel.lerp(instantaneousAccel, alpha);
 
       this.prevVel.copy(carVel);
@@ -247,7 +242,6 @@ export default class Vehicle {
         const deltaRotation = (Math.abs(forwardSpeed) * (dt * 10)) / this.controller.wheelRadius(i);
         wheelRotation =+ deltaRotation
         const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-1, 0, 0), -wheelRotation);
-        // console.log(wheelRotation)
         finalQuaternion
         .copy(chassisQuaternion)
         .multiply(steeringQuaternion)
@@ -266,7 +260,6 @@ export default class Vehicle {
   }
 
   setEngineForce(force) {
-    // rear wheels only
     this.controller.setWheelEngineForce(0, force);
     this.controller.setWheelEngineForce(1, force);
     this.controller.setWheelEngineForce(2, force);

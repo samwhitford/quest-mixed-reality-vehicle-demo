@@ -51,7 +51,6 @@ export default class Ramp {
       gravity: -20,
       drag: 0.5,
       duration: 0.25,
-      // offsetFromParent: new THREE.Vector3(0,0.16,0.25),
       offsetFromParent: new THREE.Vector3(0,1,1.1).multiplyScalar(this.options.scaleFactor),
     });
     for (const child of meshClone.children) {

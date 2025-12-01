@@ -8,7 +8,7 @@ export default {
   },
   root: "src/",
   publicDir: "../static/",
-  base: './',
+  base: '',
   plugins: [wasm(), topLevelAwait()],
   build: {
     rollupOptions: {

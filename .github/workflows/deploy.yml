@@ -39,11 +39,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install root dependencies
-        run: npm install
-
       - name: Build project
-        run: npm run build
+        run: |
+          npm install
+          npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

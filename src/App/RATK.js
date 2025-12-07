@@ -110,6 +110,7 @@ export default class RATK {
       console.log("XR_SESSION_START")
       appStateStore.setState({ xrActive: true });
       this.app.world.environment.gridHelper.visible = false;
+      this.xrInitialise();
       setTimeout(() => {
         if (this.ratk.planes.size == 0) {
           this.instance.xr.getSession().initiateRoomCapture();
@@ -206,6 +207,15 @@ export default class RATK {
         this.controllers[handedness] = null;
       });
     }
+  }
+
+  xrInitialise(){
+    inputStore.setState({ reset: true });
+    inputStore.setState({ resetObjects: true });
+    setTimeout(() => {
+      inputStore.setState({ reset: false });
+      inputStore.setState({ resetObjects: false });
+    }, 10);
   }
 
   handleControllers() {

@@ -1,0 +1,21 @@
+{
+  "name":"WebXR Racer",
+  "short_name":"WebXR Racer",
+  "start_url":"https://webxr-racer.whitfordworkshop.com/",
+  "background_color":"#000",
+  "theme_color":"#000",
+  "display":"standalone",
+  "icons":[
+    {
+      "src":"../images/icons/XR_Racer_icon_192.png",
+      "sizes":"192x192",
+      "type":"image/png",
+      "purpose":"maskable"
+    },
+    {
+      "src":"../images/icons/XR_Racer_icon_512.png",
+      "sizes":"512x512",
+      "type":"image/png"
+    }
+  ]
+}

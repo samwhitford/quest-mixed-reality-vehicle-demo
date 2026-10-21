@@ -1,43 +1,46 @@
 import * as THREE from 'three';
-import App from "../App.js";
 
 export class ConfettiCannon extends THREE.Object3D {
-    constructor(options = {}) {
+    constructor(app, options = {}) {
         super();
-        this.app = new App();
-        this.scene = this.app.scene;
+        this.app = app;
+        this.scene = app.scene;
         this.options = {
             parentMesh: null,
-            offsetFromParent: new THREE.Vector3(0,0.16,0.25),
-            rayOrigin: new THREE.Vector3(),
-            rayDirectionWorld: new THREE.Vector3(0, 1, 0),
-            particleCount: 1000,
+            offsetFromParent: new THREE.Vector3(0, 0.16, 0.25),
+            particleCount: 500,
             cylinderRadius: 0.15,
             cylinderHeight: 0.3,
-            initialSpeed: 20,
-            spreadAngle: 30,
-            gravity: -10,
-            drag: 0.1,
-            duration: 0.5,
+            initialSpeed: 5,
+            spreadAngle: 20,
+            gravity: -8,
+            drag: 0.4,
+            duration: 0.22,
+            killPlaneY: -1,
             ...options
         };
 
         this.particlesData = [];
         this.gravityVector = new THREE.Vector3(0, this.options.gravity, 0);
+        this.dummy = new THREE.Object3D();
+        this._hiddenMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+        this._syncPos = new THREE.Vector3();
+        this._syncQuat = new THREE.Quaternion();
+        this._rotatedOffset = new THREE.Vector3();
+        this._launchPos = new THREE.Vector3();
+        this._worldQuat = new THREE.Quaternion();
+        this._worldScale = new THREE.Vector3();
+        this._rayOrigin = new THREE.Vector3();
+        this._rayDirection = new THREE.Vector3(0, 1, 0);
         this.initEmitterVisuals();
         this.initRaycaster();
         this.initConfettiParticles();
-        this.dummy = new THREE.Object3D();
-        this.tempPosition = new THREE.Vector3();
-        this.tempQuaternion = new THREE.Quaternion();
-        this.tempScale = new THREE.Vector3(1, 1, 1);
-        this.tempMatrix = new THREE.Matrix4();
         this.burstDuration = this.options.duration;
         this.resetCannon();
     }
 
     initRaycaster() {
-      this.raycaster = new THREE.Raycaster(this.options.rayOrigin, this.options.rayDirectionWorld, 0, 0.1);
+      this.raycaster = new THREE.Raycaster(this._rayOrigin, this._rayDirection, 0, 0.1);
     }
 
     initEmitterVisuals() {
@@ -56,24 +59,15 @@ export class ConfettiCannon extends THREE.Object3D {
     initConfettiParticles() {
         const planeSize = 0.15;
         const geometry = new THREE.PlaneGeometry(planeSize, planeSize * 1.5);
-        const positionCount = geometry.attributes.position.count;
-        const colors = new Float32Array(positionCount * 3);
-        for (let i = 0; i < positionCount; i++) {
-            colors[i * 3] = 1;
-            colors[i * 3 + 1] = 1;
-            colors[i * 3 + 2] = 1;
-        }
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         const material = new THREE.MeshBasicMaterial({
-            vertexColors: true,
             side: THREE.DoubleSide
         });
-        const instanceColorsArray = [];
         const colorPalette = [
             new THREE.Color(0xff0000), new THREE.Color(0x00ff00),
             new THREE.Color(0x0000ff), new THREE.Color(0xffff00),
             new THREE.Color(0xff00ff), new THREE.Color(0x00ffff),
         ];
+        const instanceColorsArray = new Float32Array(this.options.particleCount * 3);
         for (let i = 0; i < this.options.particleCount; i++) {
             this.particlesData.push({
                 position: new THREE.Vector3(),
@@ -84,32 +78,28 @@ export class ConfettiCannon extends THREE.Object3D {
                 time: 0,
                 active: false,
             });
-            instanceColorsArray.push(...colorPalette[i % colorPalette.length].toArray());
+            const c = colorPalette[i % colorPalette.length];
+            instanceColorsArray[i * 3] = c.r;
+            instanceColorsArray[i * 3 + 1] = c.g;
+            instanceColorsArray[i * 3 + 2] = c.b;
         }
-        const instanceColorAttribute = new THREE.InstancedBufferAttribute(
-            new Float32Array(instanceColorsArray),
-            3
-        );
-        geometry.setAttribute('instanceColor', instanceColorAttribute);
+        const instanceColorAttribute = new THREE.InstancedBufferAttribute(instanceColorsArray, 3);
         this.confettiMesh = new THREE.InstancedMesh(
             geometry,
             material,
             this.options.particleCount
         );
         this.confettiMesh.instanceColor = instanceColorAttribute;
+        this.confettiMesh.frustumCulled = false;
         this.resetConfettiInstances();
-        this.add(this.confettiMesh);
+        this.scene.add(this.confettiMesh);
     }
 
     resetConfettiInstances() {
-        const hideMatrix = new THREE.Matrix4().makeScale(0, 0, 0); // Zero scale = hidden
         for (let i = 0; i < this.options.particleCount; i++) {
-            this.confettiMesh.setMatrixAt(i, hideMatrix);
+            this.confettiMesh.setMatrixAt(i, this._hiddenMatrix);
         }
         this.confettiMesh.instanceMatrix.needsUpdate = true;
-        if (this.confettiMesh.instanceColor) {
-             this.confettiMesh.instanceColor.needsUpdate = true;
-        }
     }
 
     resetCannon() {
@@ -127,7 +117,6 @@ export class ConfettiCannon extends THREE.Object3D {
 
     fire() {
         if (!this.isFiring) {
-            console.log("Confetti Cannon Fired!");
             this.isFiring = true;
             this.fireTime = 0;
             this.particleIndex = 0;
@@ -140,7 +129,10 @@ export class ConfettiCannon extends THREE.Object3D {
         const p = this.particlesData[index];
         p.active = true;
         p.time = 0;
-        p.position.set(0, this.options.cylinderHeight, 0);
+        // Launch position in world space
+        this._launchPos.set(0, this.options.cylinderHeight, 0);
+        this.localToWorld(this._launchPos);
+        p.position.copy(this._launchPos);
         const baseSpeed = this.options.initialSpeed;
         const spreadRad = THREE.MathUtils.degToRad(this.options.spreadAngle);
         const halfSpread = spreadRad / 2;
@@ -151,7 +143,8 @@ export class ConfettiCannon extends THREE.Object3D {
         p.velocity.x = speed * Math.sin(phi) * Math.cos(theta);
         p.velocity.y = speed * Math.cos(phi);
         p.velocity.z = speed * Math.sin(phi) * Math.sin(theta);
-        p.velocity.applyQuaternion(this.quaternion);
+        this.getWorldQuaternion(this._worldQuat);
+        p.velocity.applyQuaternion(this._worldQuat);
         p.angularVelocity.set(
             (Math.random() - 0.5) * 10,
             (Math.random() - 0.5) * 10,
@@ -162,14 +155,18 @@ export class ConfettiCannon extends THREE.Object3D {
             Math.random() * Math.PI * 2,
             Math.random() * Math.PI * 2
         );
-        p.scale = THREE.MathUtils.randFloat(0.5, 1.2);
+        // Bake in world scale so confetti size is preserved
+        this.getWorldScale(this._worldScale);
+        p.scale = THREE.MathUtils.randFloat(0.5, 1.2) * this._worldScale.x;
     }
 
     update(delta) {
         this.meshPhysicsSync();
-        const intersects = this.raycaster.intersectObject(this.app.world.vehicle.chassisMesh, true);
-        if (intersects.length > 0){
-          this.fire();
+        if (!this.isFiring && this.particleIndex === 0) {
+            const intersects = this.raycaster.intersectObject(this.app.world.vehicle.chassisMesh, true);
+            if (intersects.length > 0) {
+                this.fire();
+            }
         }
         if (this.isFiring) {
             this.fireTime += delta;
@@ -198,13 +195,13 @@ export class ConfettiCannon extends THREE.Object3D {
                 p.rotation.x += p.angularVelocity.x * delta;
                 p.rotation.y += p.angularVelocity.y * delta;
                 p.rotation.z += p.angularVelocity.z * delta;
-                if (p.position.y < -1) {
+                if (p.position.y < this.options.killPlaneY) {
                     p.active = false;
-                    this.confettiMesh.setMatrixAt(i, new THREE.Matrix4().makeScale(0, 0, 0));
+                    this.confettiMesh.setMatrixAt(i, this._hiddenMatrix);
                     continue;
                 }
                 this.dummy.position.copy(p.position);
-                this.dummy.rotation.setFromVector3(p.rotation);
+                this.dummy.rotation.set(p.rotation.x, p.rotation.y, p.rotation.z);
                 this.dummy.scale.set(p.scale, p.scale, p.scale);
                 this.dummy.updateMatrix();
                 this.confettiMesh.setMatrixAt(i, this.dummy.matrix);
@@ -218,22 +215,28 @@ export class ConfettiCannon extends THREE.Object3D {
         if (allInactive && !this.isFiring && this.fireTime > 0) {
             this.resetCannon();
         }
-      }
+    }
 
-      meshPhysicsSync() {
+    meshPhysicsSync() {
         if (this.options.parentMesh) {
-            let body = this.options.parentMesh;
-            const position = new THREE.Vector3().copy(body.translation());
-            const quaternion = new THREE.Quaternion().copy(body.rotation());
-            const rotatedOffset = this.options.offsetFromParent.clone();
-            rotatedOffset.applyQuaternion(quaternion);
-            this.position.copy(position.add(rotatedOffset));
-            this.quaternion.copy(quaternion);
-            this.options.rayOrigin = this.position;
-            this.options.rayDirectionWorld.set(0, 1, 0);
-            this.options.rayDirectionWorld.applyQuaternion(this.quaternion);
-            this.raycaster.set(this.options.rayOrigin, this.options.rayDirectionWorld);
+            const body = this.options.parentMesh;
+            this._syncPos.copy(body.translation());
+            this._syncQuat.copy(body.rotation());
+            this._rotatedOffset.copy(this.options.offsetFromParent).applyQuaternion(this._syncQuat);
+            this.position.copy(this._syncPos.add(this._rotatedOffset));
+            this.quaternion.copy(this._syncQuat);
+            this._rayOrigin.copy(this.position);
+            this._rayDirection.set(0, 1, 0).applyQuaternion(this.quaternion);
+            this.raycaster.set(this._rayOrigin, this._rayDirection);
         }
-      }
+    }
 
+    dispose() {
+        this.confettiMesh.geometry.dispose();
+        this.confettiMesh.material.dispose();
+        this.emitterMesh.geometry.dispose();
+        this.emitterMesh.material.dispose();
+        this.scene.remove(this.confettiMesh);
+        this.remove(this.emitterMesh);
+    }
 }

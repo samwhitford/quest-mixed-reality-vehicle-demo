@@ -42,15 +42,9 @@ export default class Ramp {
     meshClone.position.copy(this.options.position);
     meshClone.applyQuaternion(this.options.rotation);
     this.rampGroup.add(meshClone);
-    this.confetti = new ConfettiCannon({
-      particleCount: 500,
+    this.confetti = new ConfettiCannon(this.app, {
       cylinderRadius: 0.5 * this.options.scaleFactor,
       cylinderHeight: 0.2 * this.options.scaleFactor,
-      initialSpeed: 15,
-      spreadAngle: 30,
-      gravity: -20,
-      drag: 0.5,
-      duration: 0.25,
       offsetFromParent: new THREE.Vector3(0,1,1.1).multiplyScalar(this.options.scaleFactor),
     });
     for (const child of meshClone.children) {

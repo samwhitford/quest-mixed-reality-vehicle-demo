@@ -9,9 +9,9 @@ export default class Physics {
     this.scene = this.app.scene;
     this.meshMap = new Map();
     this.debugCoolDown = false;
-    this.previousPosition = new THREE.Vector3();
-    this.linearVelocity = new THREE.Vector3();
-    this.angularVelocity = new THREE.Vector3();
+    // Per-object throw tracking. Keyed by the grabbed mesh so that grabbing
+    // multiple objects at once doesn't let one object's data clobber another's.
+    this.throwState = new Map();
     appStateStore.subscribe((state) => {
       this.xrActive = state.xrActive;
     });
@@ -207,7 +207,7 @@ computeConvexHullDimensions(item) {
         body.setEnabled(true);
       }
       // Apply Throw Impulse
-      this.applyThrowImpulse(body);
+      this.applyThrowImpulse(body, controller);
       // Re-parent mesh
       this.scene.attach(mesh);
       mesh.userData.isGrabbed = false;
@@ -242,35 +242,49 @@ computeConvexHullDimensions(item) {
     const currentQuaternion = new THREE.Quaternion();
     controller.getWorldPosition(currentPosition);
     controller.getWorldQuaternion(currentQuaternion);
-    if (!this.previousPosition.equals(new THREE.Vector3())) {
-        this.linearVelocity.subVectors(currentPosition, this.previousPosition)
-            .divideScalar(this.world.timestep);
+
+    // Per-controller state so two hands grabbing at once don't clobber each other.
+    let state = this.throwState.get(controller);
+    if (!state) {
+      state = {
+        previousPosition: new THREE.Vector3(),
+        linearVelocity: new THREE.Vector3(),
+        angularVelocity: new THREE.Vector3(),
+        hasPrevious: false
+      };
+      this.throwState.set(controller, state);
     }
-    this.angularVelocity.set(currentQuaternion.x, currentQuaternion.y, currentQuaternion.z);
-    this.previousPosition.copy(currentPosition);
+
+    if (state.hasPrevious) {
+      state.linearVelocity.subVectors(currentPosition, state.previousPosition)
+          .divideScalar(this.world.timestep);
+    }
+    state.angularVelocity.set(currentQuaternion.x, currentQuaternion.y, currentQuaternion.z);
+    state.previousPosition.copy(currentPosition);
+    state.hasPrevious = true;
   }
 
-  applyThrowImpulse(body) {
+  applyThrowImpulse(body, controller) {
+    const state = this.throwState.get(controller);
+    if (!state) return;
     const throwFactor = 1.5;
     body.applyImpulse(
         new this.rapier.Vector3(
-            this.linearVelocity.x * body.mass() * throwFactor,
-            this.linearVelocity.y * body.mass() * throwFactor,
-            this.linearVelocity.z * body.mass() * throwFactor
+            state.linearVelocity.x * body.mass() * throwFactor,
+            state.linearVelocity.y * body.mass() * throwFactor,
+            state.linearVelocity.z * body.mass() * throwFactor
         ),
         true
     );
     body.applyTorqueImpulse(
         new this.rapier.Vector3(
-            this.angularVelocity.x * body.mass() * 0.01,
-            this.angularVelocity.y * body.mass() * 0.01,
-            this.angularVelocity.z * body.mass() * 0.01
+            state.angularVelocity.x * body.mass() * 0.01,
+            state.angularVelocity.y * body.mass() * 0.01,
+            state.angularVelocity.z * body.mass() * 0.01
         ),
         true
     );
-    this.previousPosition.set(0, 0, 0);
-    this.linearVelocity.set(0, 0, 0);
-    this.angularVelocity.set(0, 0, 0);
+    this.throwState.delete(controller);
   }
 
     loop(deltaTime) {

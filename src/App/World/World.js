@@ -7,6 +7,7 @@ import Vehicle from "./Vehicle.js";
 import VehicleController from "./VehicleController.js";
 import TrafficCone from "./Cone.js";
 import Ramp from "./Ramp.js";
+import TyreTracks from "./TyreTracks.js";
 
 import { appStateStore } from "../Utils/Store.js";
 
@@ -32,16 +33,18 @@ export default class World {
         this.grabbableObject.push(this.vehicle.chassisMesh);
         this.vehicleController = new VehicleController();
         this.environment = new Environment();
+        this.tyreTracks = new TyreTracks(this.app.scene);
         unsub();
       }
     });
   }
 
   loop(deltaTime) {
+    if (this.vehicle) this.vehicle.loop(deltaTime);
     this.physics.loop(deltaTime);
     if (this.environment) this.environment.loop();
     if (this.vehicleController) this.vehicleController.loop(deltaTime);
-    if (this.vehicle) this.vehicle.loop(deltaTime);
+    if (this.tyreTracks) this.tyreTracks.update(deltaTime, this.vehicle);
     if (this.Ramp) this.Ramp.confetti.update(deltaTime);
   }
 }

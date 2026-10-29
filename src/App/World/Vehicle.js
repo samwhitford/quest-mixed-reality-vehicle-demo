@@ -25,7 +25,7 @@ export default class Vehicle {
 
     this.config = {
       scaleFactor: 0.125,
-      position: options.position || [0, 1, -1], // spawn point
+      position: options.position || [0, 0.1, -1], // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0),
         Math.PI
@@ -239,6 +239,15 @@ export default class Vehicle {
 
   getSpeed() {
     return this.controller.currentVehicleSpeed();
+  }
+
+  wheelContactPoint(i) {
+    const p = this.controller.wheelContactPoint(i);
+    return p ? new THREE.Vector3(p.x, p.y, p.z) : new THREE.Vector3();
+  }
+
+  wheelIsTouching(i) {
+    return this.controller.wheelIsInContact(i);
   }
 
   applyMaterial(item) {

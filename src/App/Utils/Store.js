@@ -9,6 +9,8 @@ export const sizesStore = createStore(() => ({
 export const appStateStore = createStore(() => ({
   physicsReady: false,
   assetsReady: false,
+  confirmedVehicle: null,
+  worldReady: false,
   pressedStart: false,
   xrButtonExists: false,
   xrActive: false,

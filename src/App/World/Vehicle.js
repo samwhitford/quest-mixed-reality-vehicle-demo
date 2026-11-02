@@ -6,12 +6,16 @@ import { AntennaRig } from "./antenna.js";
 import App from "../App.js";
 
 export default class Vehicle {
-  constructor(options = {}) {
+  constructor(vehicle = null) {
     this.app = new App();
     this.scene = this.app.scene;
     this.assetStore = assetStore.getState();
-    this.chassis = this.assetStore.loadedAssets.chassis;
-    this.wheel = this.assetStore.loadedAssets.wheel;
+    // Vehicle entry comes from the registry (World/vehicles.js); defaults
+    // keep the original truck behaviour for entries without a config.
+    const config = (vehicle && vehicle.config) || {};
+    this.chassis =
+      this.assetStore.loadedAssets[config.chassisAsset || "chassis"];
+    this.wheel = this.assetStore.loadedAssets[config.wheelAsset || "wheel"];
     this.debugCoolDown = false;
     this.prevVel = new THREE.Vector3();
     this.smoothedAccel = new THREE.Vector3();
@@ -24,18 +28,18 @@ export default class Vehicle {
     this.physics = this.app.world.physics;
 
     this.config = {
-      scaleFactor: 0.125,
-      position: options.position || [0, 0.1, -1], // spawn point
+      scaleFactor: config.scaleFactor ?? 0.125,
+      position: config.position || [0, 0.1, -1], // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0),
         Math.PI
       ),
-      wheelRestLength: 0.03,
-      suspensionStiffness: 110,
-      frictionSlip: 15,
-      maxSuspensionTravel: 0.4,
-      suspensionDamping: 20,
-      chassisMass: 9,
+      wheelRestLength: config.wheelRestLength ?? 0.03,
+      suspensionStiffness: config.suspensionStiffness ?? 110,
+      frictionSlip: config.frictionSlip ?? 15,
+      maxSuspensionTravel: config.maxSuspensionTravel ?? 0.4,
+      suspensionDamping: config.suspensionDamping ?? 20,
+      chassisMass: config.chassisMass ?? 9,
     };
 
     this.chassis.scene.scale.setScalar(this.config.scaleFactor)

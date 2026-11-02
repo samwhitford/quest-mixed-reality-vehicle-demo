@@ -13,7 +13,39 @@
     <h1 class="loading">
       Loading Experience... <span id="progressPercentage"></span>%
     </h1>
-    <button class="start">START</button>
+    <div class="selection">
+      <img
+        class="selection-logo"
+        src="./images/logos/hero_logo.png"
+        alt="WhitfordWorkshop hero logo"
+      />
+      <h2 class="selection-title">SELECT VEHICLE</h2>
+      <div class="selection-stage">
+        <button
+          class="selection-nav selection-nav-left"
+          aria-label="Previous vehicle"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 4 L7 12 L15 20" />
+          </svg>
+        </button>
+        <div class="selection-card">
+          <svg class="silhouette" aria-hidden="true"></svg>
+          <div class="selection-name"></div>
+          <div class="selection-status"></div>
+        </div>
+        <button
+          class="selection-nav selection-nav-right"
+          aria-label="Next vehicle"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 4 L17 12 L9 20" />
+          </svg>
+        </button>
+      </div>
+      <div class="selection-dots"></div>
+      <button class="confirm" disabled>CONFIRM</button>
+    </div>
     <img class="controller" width="" src="./images/motion_controls.png"></img>
     <img class="keyboard" src="./images/keyboard_controls.png"></img>
     <div id="button"></div>

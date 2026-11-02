@@ -21,7 +21,7 @@ export default class RATK {
     };
 
     const unsub = appStateStore.subscribe((state) => {
-      if (state.physicsReady && state.assetsReady) {
+      if (state.physicsReady && state.assetsReady && state.worldReady) {
         this.app = new App();
         this.scene = this.app.scene;
         this.world = this.app.world;

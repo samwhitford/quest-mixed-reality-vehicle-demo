@@ -1,7 +1,6 @@
-
-// Is this the loading screen? might need a more UI focused name
 import assetStore from "../Utils/AssetStore";
 import { appStateStore } from "../Utils/Store";
+import VehicleSelection from "./VehicleSelection";
 
 export default class Preloader {
   constructor() {
@@ -10,9 +9,11 @@ export default class Preloader {
     // Hiding the Screen before everything gets loaded
     this.overlay = document.querySelector(".overlay");
     this.loading = document.querySelector(".loading");
-    this.startButton = document.querySelector(".start");
     this.controller = document.querySelector(".controller");
     this.keyboard = document.querySelector(".keyboard");
+
+    // Vehicle selection screen, shown once everything is loaded
+    this.selection = new VehicleSelection();
 
     this.assetStore.subscribe((state) => {
       this.numberOfLoadedAssets = Object.keys(state.loadedAssets).length;
@@ -35,31 +36,7 @@ export default class Preloader {
     // Remove the loading element from DOM
     this.loading.remove();
 
-    this.startButton.style.display = "inline";
-    this.startButton.classList.add("fadeIn");
-    this.controller.style.display = "inline";
-    this.controller.classList.add("fadeIn");
-    this.keyboard.style.display = "inline";
-    this.keyboard.classList.add("fadeIn");
-
-    this.startButton.addEventListener(
-      "click",
-      () => {
-        this.overlay.classList.add("fadeOut");
-        this.startButton.classList.add("fadeOut");
-        this.controller.classList.add("fadeOut");
-        this.keyboard.classList.add("fadeOut");
-
-        // Remove the overlay and startButton element from DOM
-        window.setTimeout(() => {
-          this.overlay.remove();
-          this.startButton.remove();
-          this.controller.remove();
-          this.keyboard.remove();
-        }, 2000);
-        appStateStore.setState({ pressedStart: true });
-      },
-      { once: true }
-    );
+    // Show the vehicle selection screen (CONFIRM starts the world)
+    this.selection.show();
   }
 }

@@ -40,27 +40,181 @@ body {
   opacity: 0;
 }
 
-.start {
+.selection {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: none;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
   color: white;
   background-color: transparent;
-  font-size: 4rem;
-  font-family: "Bungee Spice";
   opacity: 0;
-  transition: opacity 0.5s;
-  display: none;
+  transition: opacity 1s;
 }
 
-.start.fadeIn {
+.selection.fadeIn {
   opacity: 1;
 }
 
-.start.fadeOut {
+.selection.fadeOut {
   opacity: 0;
+}
+
+.selection-logo {
+  width: min(220px, 40vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.selection-title {
+  font-family: "Bungee Spice";
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.selection-stage {
+  display: flex;
+  /* Top-aligned so the arrows sit level with the silhouette centre instead
+     of the card centre (which is lower, name/status sit below the image). */
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.selection-nav {
+  width: 64px;
+  height: 64px;
+  /* Align the button centre with the silhouette centre (half of the
+     240px image height minus half of the 64px button). */
+  margin-top: calc(min(240px, 38vw) / 2 - 32px);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, background-color 0.2s, transform 0.1s;
+}
+
+.selection-nav svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: white;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.selection-nav:active {
+  transform: scale(0.94);
+}
+
+.selection-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  /* Fixed width so the nav buttons don't shift between silhouettes of
+     different aspect ratios; the SVG letterboxes within this box. */
+  width: min(480px, 60vw);
+}
+
+.silhouette {
+  width: 100%;
+  height: min(240px, 38vw);
+  display: block;
+}
+
+/* Plain silhouette entries only; .prebuilt stickers keep their own colours. */
+.silhouette:not(.prebuilt) path,
+.silhouette:not(.prebuilt) circle {
+  fill: white;
+  transition: fill 0.25s;
+}
+
+.selection.unavailable .silhouette:not(.prebuilt) path,
+.selection.unavailable .silhouette:not(.prebuilt) circle {
+  fill: #3a4145;
+  stroke: #525c61;
+  stroke-width: 1.5;
+}
+
+.selection-name {
+  font-family: "Bungee Spice";
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+}
+
+.selection.unavailable .selection-name {
+  color: #8a9296;
+}
+
+.selection-status {
+  font-family: "Bytesized";
+  font-size: 0.85rem;
+  letter-spacing: 0.35em;
+  color: #9effe7;
+}
+
+.selection.unavailable .selection-status {
+  color: #6b7478;
+}
+
+.selection-dots {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.selection-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.selection-dots .dot.active {
+  background-color: #9effe7;
+  transform: scale(1.25);
+}
+
+.confirm {
+  border: none;
+  color: #0b0e10;
+  background-color: #e9e8e8;
+  font-size: 2.4rem;
+  font-family: "Bungee Spice";
+  letter-spacing: 0.05em;
+  border-radius: 14px;
+  padding: 0.7rem 3rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.5s,
+    background-color 0.2s, color 0.2s;
+}
+
+.confirm:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.confirm:disabled {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.35);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.selection-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .controller {
@@ -96,8 +250,14 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .start:hover {
-    color: #9effe7;
+  .confirm:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(158, 255, 231, 0.25);
+  }
+
+  .selection-nav:hover {
+    border-color: #9effe7;
+    background-color: rgba(158, 255, 231, 0.08);
   }
 }
 

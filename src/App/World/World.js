@@ -8,6 +8,7 @@ import VehicleController from "./VehicleController.js";
 import TrafficCone from "./Cone.js";
 import Ramp from "./Ramp.js";
 import TyreTracks from "./TyreTracks.js";
+import { getVehicle } from "./vehicles.js";
 
 import { appStateStore } from "../Utils/Store.js";
 
@@ -18,7 +19,11 @@ export default class World {
     this.grabbableObject = [];
 
     const unsub = appStateStore.subscribe((state) => {
-      if (state.physicsReady && state.assetsReady) {
+      if (
+        state.physicsReady &&
+        state.assetsReady &&
+        state.confirmedVehicle
+      ) {
         this.trafficCone = new TrafficCone({
           scaleFactor: 0.06,
           position: new THREE.Vector3(0, 1, -0.5)
@@ -29,12 +34,14 @@ export default class World {
           position: new THREE.Vector3(0, 1, -2.2)
         });
         this.grabbableObject.push(...this.Ramp.meshArray);
-        this.vehicle = new Vehicle();
+        this.vehicle = new Vehicle(getVehicle(state.confirmedVehicle));
         this.grabbableObject.push(this.vehicle.chassisMesh);
         this.vehicleController = new VehicleController();
         this.environment = new Environment();
         this.tyreTracks = new TyreTracks(this.app.scene);
         unsub();
+        // RATK and the renderer wait for this before building/starting
+        appStateStore.setState({ worldReady: true });
       }
     });
   }

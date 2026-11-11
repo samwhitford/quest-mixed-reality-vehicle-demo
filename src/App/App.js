@@ -7,6 +7,7 @@ import Resize from "./Utils/Resize.js";
 import AssetLoader from "./Utils/AssetLoader.js";
 import Preloader from "./UI/Preloader.js";
 import InputController from "./UI/InputController.js";
+import Joystick from "./UI/Joystick.js";
 import RATK from "./RATK.js";
 
 let instance = null;
@@ -27,6 +28,7 @@ export default class App {
     // UI
     this.preloader = new Preloader();
     this.inputController = new InputController();
+    this.joystick = new Joystick();
 
     // World
     this.world = new World();

@@ -297,3 +297,78 @@ img {
   /* box-shadow: 0 9px #2c2c2c; */
 }
 
+.mobile-controls {
+  position: fixed;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.mobile-controls.visible {
+  display: block;
+}
+
+.joy-base {
+  position: absolute;
+  bottom: 28px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.joy-base.throttle {
+  left: 28px;
+}
+
+.joy-base.steer {
+  right: 28px;
+}
+
+.joy-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(158, 255, 231, 0.85);
+  transform: translate(0px, 0px);
+}
+
+.mobile-buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.m-btn {
+  width: 96px;
+  padding: 13px 0;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-family: "Bytesized";
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.m-btn:active {
+  background: rgba(158, 255, 231, 0.25);
+}
+

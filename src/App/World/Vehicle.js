@@ -22,9 +22,8 @@ export default class Vehicle {
     inputStore.subscribe((state) => {
       this.debug = state.debug;
     });
-    this.applyMaterial(this.chassis);
-    this.applyMaterial(this.wheel);
-    this.world = this.app.world
+
+    this.world = this.app.world;
     this.physics = this.app.world.physics;
 
     this.config = {
@@ -40,7 +39,16 @@ export default class Vehicle {
       maxSuspensionTravel: config.maxSuspensionTravel ?? 0.4,
       suspensionDamping: config.suspensionDamping ?? 20,
       chassisMass: config.chassisMass ?? 9,
+      materialHelper: config.materialHelper ?? false,
+      antennaPosition: config.antennaPosition || [-0.25, 0.45, 0.85],
+      meshPosOffset: config.meshPosOffset || [0, 0, 0],
+      antennaScalar: config.antennaScalar || 3,
     };
+
+    if (this.config.materialHelper) {
+      this.applyMaterial(this.chassis);
+      this.applyMaterial(this.wheel);
+    }
 
     this.chassis.scene.scale.setScalar(this.config.scaleFactor)
     this.wheel.scene.scale.setScalar(this.config.scaleFactor + 0.002)
@@ -87,8 +95,8 @@ export default class Vehicle {
     this.chassisMesh.castShadow = true;
     this.scene.add(this.chassisMesh);
     this.chassisMesh.add(this.chassis.scene);
-    this.chassisMesh.children[0].position.y += 0.02;
-    this.chassisMesh.children[0].position.z -= 0.015;
+    this.chassisMesh.children[0].position.y += this.config.meshPosOffset[1];
+    this.chassisMesh.children[0].position.z += this.config.meshPosOffset[2];
     this.antenna = new AntennaRig({
       boneCount: 5,
       length: 0.2,
@@ -99,8 +107,12 @@ export default class Vehicle {
     });
     this.antennaGroup = new THREE.Group();
     this.antennaGroup.add(this.antenna.object3d);
-    this.antennaGroup.position.set(-0.25, 0.45, 0.85)
-    this.antennaGroup.scale.setScalar(3)
+    this.antennaGroup.position.set(
+      this.config.antennaPosition[0],
+      this.config.antennaPosition[1],
+      this.config.antennaPosition[2]
+    )
+    this.antennaGroup.scale.setScalar(this.config.antennaScalar);
     this.chassis.scene.add(this.antennaGroup);
 
     // --- Vehicle Controller ---

@@ -1,6 +1,11 @@
 import brunoTruckSvg from "./Silhouettes/bruno_truck.svg?raw";
+import hatchbackSvg from "./Silhouettes/hatchback.svg?raw";
 
 const brunoTruckInner = brunoTruckSvg
+  .replace(/^\s*<svg[^>]*>/, "")
+  .replace(/<\/svg>\s*$/, "");
+
+const hatchbackInner = hatchbackSvg
   .replace(/^\s*<svg[^>]*>/, "")
   .replace(/<\/svg>\s*$/, "");
 
@@ -26,20 +31,11 @@ export const SILHOUETTES = {
     viewBox: "0 0 998 1000",
     inner: brunoTruckInner,
   },
-  sedan: {
-    viewBox: "0 0 120 120",
-    inner: PADLOCK,
+  hatchback: {
+    viewBox: "0 0 998 1000",
+    inner: hatchbackInner,
   },
-  coupe: {
-    viewBox: "0 0 384 150",
-    body:
-      "M 16 108 L 16 92 L 66 82 L 118 50 L 192 44 L 262 62 L 322 84 L 368 92 L 372 108 Z",
-    wheels: [
-      [100, 120, 25],
-      [292, 120, 25],
-    ],
-  },
-  van: {
+  kei: {
     viewBox: "0 0 120 120",
     inner: PADLOCK,
   },

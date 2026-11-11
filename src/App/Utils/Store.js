@@ -13,6 +13,7 @@ export const appStateStore = createStore(() => ({
   worldReady: false,
   pressedStart: false,
   xrButtonExists: false,
+  xrStartRequested: false,
   xrActive: false,
 }));
 

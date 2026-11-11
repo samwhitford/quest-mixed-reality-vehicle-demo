@@ -50,6 +50,9 @@ export default class Vehicle {
       this.applyMaterial(this.wheel);
     }
 
+    this.setCastShadow(this.chassis);
+    this.setCastShadow(this.wheel);
+
     this.chassis.scene.scale.setScalar(this.config.scaleFactor)
     this.wheel.scene.scale.setScalar(this.config.scaleFactor + 0.002)
     this.centerGeometry(this.chassis);
@@ -280,12 +283,20 @@ export default class Vehicle {
     item.scene.traverse(function(object){
         if(object.isMesh)
         {
-            object.castShadow = true
             let materialName = Object.keys(materials).find((_materialName) => object.name.startsWith(_materialName));
             if (typeof materialName === 'undefined') {
                 materialName = 'pureWhite';
             }
             object.material = materials[materialName].clone();
+        }
+    })
+  }
+
+  setCastShadow(item) {
+    item.scene.traverse(function(object){
+        if(object.isMesh)
+        {
+            object.castShadow = true;
         }
     })
   }

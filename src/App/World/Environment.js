@@ -35,7 +35,7 @@ export default class Environment {
     this.floorMesh.position.y = 5
     this.floorMesh.receiveShadow = true
     this.scene.add(this.floorMesh)
-    this.physics.add(this.floorMesh, "fixed", "trimesh");
+    this.physics.add(this.floorMesh, "fixed", "trimeshInward");
     this.gridHelper = new InfiniteGridHelper(
       0.25,
       10,

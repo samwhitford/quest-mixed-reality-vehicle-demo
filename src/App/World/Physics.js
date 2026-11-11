@@ -9,8 +9,7 @@ export default class Physics {
     this.scene = this.app.scene;
     this.meshMap = new Map();
     this.debugCoolDown = false;
-    // Per-object throw tracking. Keyed by the grabbed mesh so that grabbing
-    // multiple objects at once doesn't let one object's data clobber another's.
+    this.pendingWakeups = [];
     this.throwState = new Map();
     appStateStore.subscribe((state) => {
       this.xrActive = state.xrActive;
@@ -77,6 +76,14 @@ export default class Physics {
           indices
         );
         break;
+      case "trimeshInward":
+        const inward = this.makeNormalsInward(this.computeTrimeshDimensions(mesh));
+        colliderType = this.rapier.ColliderDesc.trimesh(
+          inward.vertices,
+          inward.indices,
+          this.rapier.TriMeshFlags.ORIENTED
+        );
+        break;
       case "convexHull":
         const vertices = this.computeConvexHullDimensions(mesh);
         colliderType = this.rapier.ColliderDesc.convexHull(vertices);
@@ -88,6 +95,11 @@ export default class Physics {
     this.rigidBody.setTranslation(worldPosition);
     this.rigidBody.setRotation(worldRotation);
     this.meshMap.set(mesh, this.rigidBody);
+
+    if (type === "dynamic") {
+      this.rigidBody.setEnabled(false);
+      this.pendingWakeups.push({ body: this.rigidBody, steps: 10 });
+    }
 
     return this.rigidBody;
   }
@@ -128,6 +140,28 @@ computeConvexHullDimensions(item) {
     const worldScale = mesh.getWorldScale(new THREE.Vector3());
     const maxScale = Math.max(worldScale.x, worldScale.y, worldScale.z);
     return radius * maxScale;
+  }
+
+  makeNormalsInward({ scaledVertices: vertices, indices }) {
+    let volume = 0;
+    for (let i = 0; i < indices.length; i += 3) {
+      const a = indices[i] * 3;
+      const b = indices[i + 1] * 3;
+      const c = indices[i + 2] * 3;
+      volume +=
+        vertices[a] * (vertices[b + 1] * vertices[c + 2] - vertices[b + 2] * vertices[c + 1]) +
+        vertices[a + 1] * (vertices[b + 2] * vertices[c] - vertices[b] * vertices[c + 2]) +
+        vertices[a + 2] * (vertices[b] * vertices[c + 1] - vertices[b + 1] * vertices[c]);
+    }
+
+    if (volume > 0) { // normals point out — flip every triangle
+      const flipped = [];
+      for (let i = 0; i < indices.length; i += 3) {
+        flipped.push(indices[i], indices[i + 2], indices[i + 1]);
+      }
+      return { vertices, indices: flipped };
+    }
+    return { vertices, indices };
   }
 
   computeTrimeshDimensions(mesh) {
@@ -286,11 +320,19 @@ computeConvexHullDimensions(item) {
     );
     this.throwState.delete(controller);
   }
-
     loop(deltaTime) {
     if (!this.rapierLoaded) return;
-    this.world.timestep = deltaTime;
+    const dt = Number.isFinite(deltaTime) && deltaTime > 0 ? deltaTime : 1 / 60;
+    this.world.timestep = Math.min(dt, 1 / 30);
     this.world.step();
+    if (this.pendingWakeups.length) {
+      for (let i = this.pendingWakeups.length - 1; i >= 0; i--) {
+        if (--this.pendingWakeups[i].steps <= 0) {
+          this.pendingWakeups[i].body.setEnabled(true);
+          this.pendingWakeups.splice(i, 1);
+        }
+      }
+    }
     if ( this.physicsHelper && ! this.xrActive ) {
       this.physicsHelper.update();
     }
@@ -304,5 +346,4 @@ computeConvexHullDimensions(item) {
     }
     this.meshPhysicsSync();
   }
-
 }

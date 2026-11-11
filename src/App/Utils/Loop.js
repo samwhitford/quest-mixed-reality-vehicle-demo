@@ -14,9 +14,10 @@ export default class Loop {
     this.start();
     this.paused = false;
      document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
+      const presenting = this.app.renderer.instance.xr.isPresenting;
+      if (document.visibilityState === 'hidden' && !presenting) {
         this.paused = true;
-      } else {
+      } else if (document.visibilityState === 'visible') {
         setTimeout(() => {
           this.paused = false;
         }, 200);
@@ -26,7 +27,13 @@ export default class Loop {
 
   start() {
     this.clock.start();
-    this.renderer.instance.setAnimationLoop((time,frame) => this.loop(time,frame))
+    this.renderer.instance.setAnimationLoop((time, frame) => {
+      try {
+        this.loop(time, frame);
+      } catch (err) {
+        console.error('XR frame loop error', err);
+      }
+    });
   }
 
   stop() {

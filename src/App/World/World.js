@@ -24,6 +24,7 @@ export default class World {
         state.assetsReady &&
         state.confirmedVehicle
       ) {
+        this.environment = new Environment();
         this.trafficCone = new TrafficCone({
           scaleFactor: 0.06,
           position: new THREE.Vector3(0, 1, -0.5)
@@ -37,7 +38,6 @@ export default class World {
         this.vehicle = new Vehicle(getVehicle(state.confirmedVehicle));
         this.grabbableObject.push(this.vehicle.chassisMesh);
         this.vehicleController = new VehicleController();
-        this.environment = new Environment();
         this.tyreTracks = new TyreTracks(this.app.scene);
         unsub();
         // RATK and the renderer wait for this before building/starting

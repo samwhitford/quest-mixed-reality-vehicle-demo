@@ -1,17 +1,13 @@
 import { appStateStore } from "../Utils/Store.js";
+import App from "../App.js";
 import { VEHICLES } from "../World/vehicles.js";
 import { SILHOUETTES } from "./Silhouettes.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-// Vehicle selection screen shown after the preloader finishes.
-// Drives the .selection UI in index.html: left/right navigation between the
-// vehicles registered in World/vehicles.js, placeholder silhouettes for
-// unavailable entries and a CONFIRM action that kicks off the world build.
 export default class VehicleSelection {
   constructor() {
     this.vehicles = VEHICLES;
-    // Start on the first available vehicle (falls back to the first entry).
     this.index = Math.max(
       0,
       this.vehicles.findIndex((vehicle) => vehicle.available)
@@ -146,11 +142,16 @@ export default class VehicleSelection {
       );
     }, 2000);
 
-    // World builds itself once it sees this (see World.js); RATK follows on
-    // worldReady, and the Renderer creates the ENTER XR button off pressedStart.
     appStateStore.setState({
       pressedStart: true,
       confirmedVehicle: vehicle.id,
     });
+
+    if (
+      navigator.xr &&
+      /quest|oculusbrowser|meta quest/i.test(navigator.userAgent)
+    ) {
+      new App().renderer.startXRSession();
+    }
   }
 }

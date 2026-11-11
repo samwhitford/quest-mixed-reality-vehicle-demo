@@ -94,7 +94,9 @@ export default class RATK {
           color: Math.random() * 0xffffff,
         });
         this.roomScanMesh = meshMesh;
-        this.physics.add(meshMesh, "fixed", "trimesh");
+        // The scan mesh encloses the user, so its faces need to point into
+        // the room — see Physics.makeNormalsInward.
+        this.physics.add(meshMesh, "fixed", "trimeshInward");
         this.createShadowOcclusion(mesh)
       }else{
         meshMesh.material = new THREE.MeshBasicMaterial({
@@ -111,18 +113,48 @@ export default class RATK {
       console.log("XR_SESSION_START")
       appStateStore.setState({ xrActive: true });
       this.app.world.environment.gridHelper.visible = false;
-      this.xrInitialise();
+      // Mixed reality (Quest immersive-ar) composites the real world behind
+      // the scene — the opaque 2D-preview background would hide it.
+      const blendMode = this.instance.xr.getEnvironmentBlendMode();
+      if (blendMode === 'alpha-blend' || blendMode === 'additive') {
+        this.savedBackground = this.app.scene.background;
+        this.app.scene.background = null;
+      }
       setTimeout(() => {
-        if (this.ratk.planes.size == 0) {
-          this.instance.xr.getSession().initiateRoomCapture();
+        if (this.ratk.planes.size > 0) return;
+        // initiateRoomCapture() is a non-standard Meta WebXR extension.
+        // Browsers without it: typeof check. Browsers where it isn't
+        // possible (session without planes/meshes): it REJECTS asynchronously
+        // — the promise must be caught, not just the sync call.
+        const session = this.instance.xr.getSession();
+        if (session && typeof session.initiateRoomCapture === 'function') {
+          try {
+            const result = session.initiateRoomCapture();
+            if (result && typeof result.catch === 'function') {
+              result.catch((err) =>
+                console.warn('initiateRoomCapture rejected', err)
+              );
+            }
+          } catch (err) {
+            console.warn('initiateRoomCapture failed', err);
+          }
+        } else {
+          console.warn('initiateRoomCapture not available in this browser');
         }
       }, 5000);
     });
-    this.instance.xr.addEventListener('sessionend', () => {
-      console.log("XR_SESSION_END")
+    this.instance.xr.addEventListener('sessionend', (event) => {
+      console.log("XR_SESSION_END", event?.reason ?? '(no reason given)');
       this.app.camera.reset();
       this.app.world.environment.gridHelper.visible = true;
+      if (this.savedBackground !== undefined) {
+        this.app.scene.background = this.savedBackground;
+        this.savedBackground = undefined;
+      }
       appStateStore.setState({ xrActive: false });
+      if (!document.getElementById('XRButton')) {
+        appStateStore.setState({ xrButtonExists: false });
+      }
     });
     const environment = new RoomEnvironment(this.instance);
     const pmremGenerator = new THREE.PMREMGenerator(this.instance);
@@ -208,15 +240,6 @@ export default class RATK {
         this.controllers[handedness] = null;
       });
     }
-  }
-
-  xrInitialise(){
-    inputStore.setState({ reset: true });
-    inputStore.setState({ resetObjects: true });
-    setTimeout(() => {
-      inputStore.setState({ reset: false });
-      inputStore.setState({ resetObjects: false });
-    }, 10);
   }
 
   handleControllers() {

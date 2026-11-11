@@ -17,32 +17,99 @@ export default class Renderer {
   }
 
   setInstance() {
+    // antialias must stay false: three's XR projection-layer path turns
+    // antialias into a 4x-MSAA render target on the full headset
+    // framebuffer (~2160x1620x2). On Quest's mobile GPU that allocation is
+    // large enough to OOM-kill the browser tab when the session starts
     this.instance = new THREE.WebGLRenderer({
       canvas: this.canvas,
-      antialias: true,
+      antialias: false,
       alpha: true,
       multiviewStereo: true,
     });
     this.instance.setSize(this.sizes.width, this.sizes.height);
     this.instance.setPixelRatio(this.sizes.pixelRatio);
-    this.instance.outputEncoding = THREE.sRGBEncoding;
+    this.instance.outputColorSpace = THREE.SRGBColorSpace;
     this.instance.shadowMap.enabled = true;
     this.instance.shadowMap.type = THREE.PCFSoftShadowMap;
     this.instance.xr.enabled = true;
   }
 
-  createXRButton() {
-    document.body.appendChild( XRButton.createButton( this.instance, {
-      requiredFeatures: [
+  getXRSessionInit() {
+    return {
+      requiredFeatures: ['local-floor'],
+      optionalFeatures: [
         'anchors',
         'plane-detection',
         'hit-test',
         'mesh-detection',
-        'local-floor',
-      ]
-    } ) );
+        'layers',
+      ],
+    };
+  }
+
+  createXRButton() {
+    document.body.appendChild(
+      XRButton.createButton(this.instance, this.getXRSessionInit())
+    );
     document.body.appendChild(this.instance.domElement);
     appStateStore.setState({ xrButtonExists: true });
+  }
+
+  async startXRSession() {
+    const state = appStateStore.getState();
+    if (!navigator.xr || state.xrButtonExists || state.xrStartRequested) {
+      return false;
+    }
+
+    appStateStore.setState({ xrStartRequested: true });
+
+    const metaFeatures = [
+      'anchors',
+      'plane-detection',
+      'hit-test',
+      'mesh-detection',
+      'layers',
+    ];
+    const attempts = [
+      {
+        mode: 'immersive-ar',
+        init: {
+          requiredFeatures: ['local-floor'],
+          optionalFeatures: metaFeatures,
+        },
+      },
+      {
+        mode: 'immersive-ar',
+        init: { requiredFeatures: ['local-floor'], optionalFeatures: ['layers'] },
+      },
+      {
+        mode: 'immersive-vr',
+        init: { requiredFeatures: ['local-floor'], optionalFeatures: ['layers'] },
+      },
+    ];
+
+    let session = null;
+    for (const { mode, init } of attempts) {
+      try {
+        console.log('XR startXRSession: requesting', mode, init);
+        session = await navigator.xr.requestSession(mode, init);
+        console.log('XR startXRSession: session granted, handing to renderer');
+        await this.instance.xr.setSession(session);
+        console.log('XR startXRSession: session active');
+        appStateStore.setState({ xrButtonExists: true }); // suppress the button
+        return true;
+      } catch (err) {
+        console.warn('XR startXRSession: attempt failed', mode, init, err);
+        if (session) {
+          session.end().catch(() => {});
+          session = null;
+        }
+      }
+    }
+
+    appStateStore.setState({ xrStartRequested: false }); // fall back to button
+    return false;
   }
 
   setResizeLister() {
@@ -53,8 +120,13 @@ export default class Renderer {
   }
 
   loop() {
-    if (appStateStore.getState().pressedStart && ! appStateStore.getState().xrButtonExists){
-      this.createXRButton()
+    const state = appStateStore.getState();
+    if (
+      state.pressedStart &&
+      !state.xrButtonExists &&
+      !state.xrStartRequested
+    ) {
+      this.createXRButton();
     }
     this.instance.render(this.scene, this.camera.instance);
   }

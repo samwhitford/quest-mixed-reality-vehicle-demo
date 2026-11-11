@@ -1,13 +1,23 @@
 import { createStore } from "zustand/vanilla";
 const assetsToLoad = [
   {
-    id: "chassis",
+    id: "truck_chassis",
     path: "/models/truck/chassis.gltf",
     type: "model",
   },
   {
-    id: "wheel",
+    id: "truck_wheel",
     path: "/models/truck/wheel.gltf",
+    type: "model",
+  },
+  {
+    id: "hatchback_chassis",
+    path: "/models/hatchback/chassis.glb",
+    type: "model",
+  },
+  {
+    id: "hatchback_wheel",
+    path: "/models/hatchback/wheel.glb",
     type: "model",
   },
   {

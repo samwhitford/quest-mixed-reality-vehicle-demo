@@ -23,7 +23,7 @@ export default class Ramp {
     this.options = {
       scaleFactor: 1,
       quantity: 1,
-      position: new THREE.Vector3(-0.2, 1, -3), // spawn point
+      position: new THREE.Vector3(-0.2, 0.3, -3), // spawn point
       rotation: new THREE.Quaternion().setFromAxisAngle(
         new THREE.Vector3(0, 1, 0),
         Math.PI

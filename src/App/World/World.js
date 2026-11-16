@@ -27,12 +27,12 @@ export default class World {
         this.environment = new Environment();
         this.trafficCone = new TrafficCone({
           scaleFactor: 0.06,
-          position: new THREE.Vector3(0, 1, -0.5)
+          position: new THREE.Vector3(0, 0.3, -0.5)
         });
         this.grabbableObject.push(...this.trafficCone.meshArray);
         this.Ramp = new Ramp({
           scaleFactor: 0.12,
-          position: new THREE.Vector3(0, 1, -2.2)
+          position: new THREE.Vector3(0, 0.3, -2.2)
         });
         this.grabbableObject.push(...this.Ramp.meshArray);
         this.vehicle = new Vehicle(getVehicle(state.confirmedVehicle));

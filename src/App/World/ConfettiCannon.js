@@ -50,13 +50,13 @@ export class ConfettiCannon extends THREE.Object3D {
             this.options.cylinderHeight,
             32
         );
-        const material = new THREE.MeshPhongMaterial({ color: 0x555555 });
+        const material = new THREE.MeshBasicMaterial({ color: 0x555555, visible: false });
         this.emitterMesh = new THREE.Mesh(geometry, material);
         this.emitterMesh.position.y = this.options.cylinderHeight / 2;
         this.add(this.emitterMesh);
     }
 
-    initConfettiParticles() {
+    initConfettiParticles() { 
         const planeSize = 0.15;
         const geometry = new THREE.PlaneGeometry(planeSize, planeSize * 1.5);
         const material = new THREE.MeshBasicMaterial({
